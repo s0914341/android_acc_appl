@@ -501,7 +501,6 @@ public class LEDActivity extends Activity{
 		
 		public void run() {
 			int readcount;
-			//byte[] buffer = new byte[android_accessory_packet.TOTAL_SIZE];
 		    android_accessory_packet[] receive_data = new android_accessory_packet[]{
 		    		new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE),
 		    		new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE),
