@@ -7,11 +7,9 @@ import java.io.IOException;
 
 import FTDI.LED.R.drawable;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbAccessory;
@@ -68,7 +66,6 @@ public class LEDActivity extends Activity{
     
     public EditText etInput; //shaker command input
     public TextView shaker_return;
-  //  public String str;
     
     /*thread to listen USB data*/
     public handler_thread handlerThread;
@@ -374,8 +371,7 @@ public class LEDActivity extends Activity{
 		}
 	}
 	
-	public void Slider_Receive(byte[] data)
-	{
+	public void Slider_Receive(byte[] data) {
 		ledvolume = (ImageView) findViewById(R.id.LEDvolume);
 		if((int)data[3] == 0)
 		{
@@ -415,16 +411,24 @@ public class LEDActivity extends Activity{
 		}
 	}
 	
-	public void SensorData_Receive(android_accessory_packet rec)
-	{
-		byte[] byte_str = new byte[rec.get_data_size()];
-    	System.arraycopy(rec.buffer, rec.DATA_START, byte_str, 0, rec.get_data_size());
+	public void SensorData_Receive(android_accessory_packet rec) {
+		file_operation write_file = new file_operation("Sensor", "sensor", true);
+		byte[] byte_str = new byte[rec.get_Len_value()];
+    	System.arraycopy(rec.buffer, rec.DATA_START, byte_str, 0, rec.get_Len_value());
     	String str = new String(byte_str);
     	shaker_return.setText(str);
+    	try {
+    		write_file.create_file(write_file.generate_filename());
+    		write_file.write_file_msg(str);
+    		write_file.flush_close_file();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 	
-	private void CloseAccessory()
-	{
+	private void CloseAccessory() {
 		try{
 			filedescriptor.close();
 		}catch (IOException e){}
@@ -446,7 +450,6 @@ public class LEDActivity extends Activity{
 		outputstream = null;
 	
 		System.exit(0);
-	
 	}
 		
 	
