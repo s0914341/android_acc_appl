@@ -20,6 +20,8 @@ import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.widget.EditText;
@@ -104,7 +106,7 @@ public class LEDActivity extends Activity{
         	public void onClick(View v) 
         	{
         		byte ibutton = 0x01;
-        		Log.d("LED", "Button 1 pressed");
+        		Log.d("EXPERIMENT", "START EXPERIMENT");
         		
         		ledPrevMap ^= 0x01;
         		
@@ -116,9 +118,7 @@ public class LEDActivity extends Activity{
         		}
         			
         		
-        		
-        		//v.bringToFront();
-        		WriteUsbData(ibutton);
+        		UsbCommandSetExperimentStatus(android_accessory_packet.STATUS_EXPERIMENT_START, 1);
         	}
 		});
         
@@ -190,7 +190,6 @@ public class LEDActivity extends Activity{
                Toast.makeText(LEDActivity.this, etInput.getText(), Toast.LENGTH_SHORT).show(); 
                String cmd = etInput.getText().toString();  
                byte[] usb_cmd = cmd.getBytes();
-               //byte ibutton = 0x08;
                WriteUsbCommandShaker(usb_cmd, cmd.length());
                return true; 
             } 
@@ -274,6 +273,13 @@ public class LEDActivity extends Activity{
 			}
         });
     }
+    
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.setting_menu, menu);
+		return true;
+	}
         
         
     @Override
@@ -463,10 +469,23 @@ public class LEDActivity extends Activity{
     		handle_receive_data.copy_to_buffer(recv, handle_receive_data.get_size());
     		
     		switch (handle_receive_data.get_Type_value()) {
-    		    case android_accessory_packet.DATA_TYPE_SHAKER_RETURN:
+    		    case android_accessory_packet.DATA_TYPE_KEYPAD:
+		    	    KeypadLed_Receive(handle_receive_data.buffer);
+    		    break;
+    		    
+    		    case android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS:
+    		    	//Slider_Receive(handle_receive_data.buffer);
+        		break;
+        		
+    		    case android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND:
+    		    	
+        		break;
+    		
+    		    case android_accessory_packet.DATA_TYPE_GET_SHAKER_RETURN:
     		    	byte[] byte_str = new byte[handle_receive_data.get_data_size()];
     		    	System.arraycopy(handle_receive_data.buffer, handle_receive_data.DATA_START, byte_str, 0, handle_receive_data.get_data_size());
     		    	String str = new String(byte_str);
+    		    	
     		   // 	String str = new String();
     		   // 	str = String.format("[0]=%d, [1]=%d, [2]=%d, [3]=%d, [4]=%d\n[5]=%d, [6]=%d, [7]=%d, [8]=%d, [9]=%d", recv[0], recv[1],
     		   // 			recv[2],recv[3],recv[4],recv[5],recv[6],recv[7],recv[8],recv[9]);
@@ -474,17 +493,19 @@ public class LEDActivity extends Activity{
     		    	shaker_return.setText(str);
     			break;
     			
-    		    case android_accessory_packet.DATA_TYPE_SENSOR_DATA:
-    		    	SensorData_Receive(handle_receive_data);
-        		break;
-    			
-    		    case android_accessory_packet.DATA_TYPE_SLIDER:
-    		    	Slider_Receive(handle_receive_data.buffer);
+    		    case android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA:
         		break;
         		
-    		    case android_accessory_packet.DATA_TYPE_KEYPAD:
-    		    	KeypadLed_Receive(handle_receive_data.buffer);
-        		break;
+    		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT:
+            	break;
+    			
+    		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS:
+    		    	Log.d("EXPERIMENT", "RECEIVE SET EXPERIMENT STATUS");
+                break;
+                
+    		    case android_accessory_packet.DATA_TYPE_NOTIFY_EXPERIMENT_DATA:
+    		    	SensorData_Receive(handle_receive_data);
+        		break;			
     		}
     	}
     };
@@ -548,7 +569,7 @@ public class LEDActivity extends Activity{
 		data[0] = iButton;
 		
 		acc_pkg_transfer.copy_to_data(data, len);
-		acc_pkg_transfer.set_Type((byte)0);
+		acc_pkg_transfer.set_Type((byte)android_accessory_packet.DATA_TYPE_KEYPAD);
 		acc_pkg_transfer.set_Len((byte)1);
 		
 		Log.d("LED", "pressed " +iButton);
@@ -561,9 +582,26 @@ public class LEDActivity extends Activity{
 		catch (IOException e) {}		
 	}
 	
+	public void UsbCommandSetExperimentStatus(byte cmd, int len){	
+		byte[] data = new byte[1];
+		data[0] = cmd;
+		acc_pkg_transfer.copy_to_data(data, len);
+		acc_pkg_transfer.set_Type((byte)android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS);
+		acc_pkg_transfer.set_Len((byte)len);
+		
+		//Log.d("Shaker", "pressed " +iButton);
+
+		try{
+			if(outputstream != null){
+				outputstream.write(acc_pkg_transfer.buffer, 0, len + acc_pkg_transfer.get_header_size());
+			}
+		}
+		catch (IOException e) {}		
+	}
+	
 	public void WriteUsbCommandShaker(byte[] cmd, int len){	
 		acc_pkg_transfer.copy_to_data(cmd, len);
-		acc_pkg_transfer.set_Type((byte)2);
+		acc_pkg_transfer.set_Type((byte)android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND);
 		acc_pkg_transfer.set_Len((byte)len);
 		
 		//Log.d("Shaker", "pressed " +iButton);

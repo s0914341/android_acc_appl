@@ -2,10 +2,21 @@ package FTDI.LED;
 
 public class android_accessory_packet {
 	public static final byte DATA_TYPE_KEYPAD = 0;
-	public static final byte DATA_TYPE_SLIDER = 1;
-	public static final byte DATA_TYPE_SHAKER_COMMAND = 2;
-	public static final byte DATA_TYPE_SHAKER_RETURN = 3;
-	public static final byte DATA_TYPE_SENSOR_DATA = 4;
+	public static final byte DATA_TYPE_GET_MACHINE_STATUS = 1;
+	public static final byte DATA_TYPE_SEND_SHAKER_COMMAND = 2;
+	public static final byte DATA_TYPE_GET_SHAKER_RETURN = 3;
+	public static final byte DATA_TYPE_GET_EXPERIMENT_DATA = 4;
+	public static final byte DATA_TYPE_SET_EXPERIMENT_SCRIPT = 5;
+	public static final byte DATA_TYPE_SET_EXPERIMENT_STATUS = 6;
+	public static final byte DATA_TYPE_NOTIFY_EXPERIMENT_DATA = 7;
+	
+	public static final byte  STATUS_EXPERIMENT_IDLE = 0;
+	public static final byte  STATUS_EXPERIMENT_START = 1; 
+	public static final byte  STATUS_EXPERIMENT_RUNNING = 2;
+	public static final byte  STATUS_EXPERIMENT_STOP = 3;
+	public static final byte  STATUS_EXPERIMENT_STORAGE_FULL = 4;
+	public static final byte  STATUS_EXPERIMENT_FINISH = 5;
+	
 	
 	public static final int PREFIX = 0;
 	public static final int TYPE = 1; 
