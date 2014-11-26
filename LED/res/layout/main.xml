@@ -27,14 +27,40 @@
             </TextView>
         	
         	<TextView 
-            	android:id="@+id/textView2" 
+            	android:id="@+id/textViewButton1" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
             	android:layout_width="wrap_content" 
             	android:layout_height="wrap_content" 
             	android:layout_alignParentLeft="true" 
-            	android:text="Buttons"
-            	android:layout_marginLeft="25dp"
+            	android:text="Start"
+            	android:layout_marginLeft="35dp"
             	android:layout_marginTop="110dp"
+            	android:textStyle="bold">
+            </TextView>
+            
+        	<TextView 
+            	android:id="@+id/textViewButton2" 
+            	android:textAppearance="?android:attr/textAppearanceMedium"
+            	android:layout_width="wrap_content" 
+            	android:layout_height="wrap_content" 
+            	android:layout_toRightOf="@+id/textViewButton1" 
+            	android:layout_alignTop="@+id/textViewButton1" 
+            	android:layout_alignBottom="@+id/textViewButton1"
+            	android:text="Get Data"
+            	android:layout_marginLeft="42dp"
+            	android:textStyle="bold">
+            </TextView>
+            
+        	<TextView 
+            	android:id="@+id/textViewButton3" 
+            	android:textAppearance="?android:attr/textAppearanceMedium"
+            	android:layout_width="wrap_content" 
+            	android:layout_height="wrap_content" 
+            	android:layout_toRightOf="@+id/textViewButton2" 
+            	android:layout_alignTop="@+id/textViewButton2" 
+            	android:layout_alignBottom="@+id/textViewButton2"
+            	android:text="Set Script"
+            	android:layout_marginLeft="42dp"
             	android:textStyle="bold">
             </TextView>
             
@@ -196,49 +222,54 @@
         	android:layout_width="match_parent" 
         	android:background="@drawable/border2">
         	<TextView 
-            	android:id="@+id/slider" 
+            	android:id="@+id/MachineInformation" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
             	android:layout_width="wrap_content" 
             	android:layout_height="wrap_content" 
             	android:layout_alignParentLeft="true" 
-            	android:text="Slider"
+            	android:text="Machine information"
             	android:layout_marginLeft="25dp"
             	android:layout_marginTop="10dp"
             	android:textStyle="bold">
             </TextView>
-            
-            <ProgressBar android:id="@+id/progressbar" 
-            	style="?android:attr/progressBarStyleHorizontal"
-            	android:layout_marginTop="45dp"
-            	android:layout_marginLeft="25dp"
-   				android:progress="0"
-            	android:layout_width="270dp"
-            	android:layout_height="30dp">
-            </ProgressBar>
+             
             <ImageView 
-            	android:layout_width="wrap_content" 
-            	android:layout_height="wrap_content" 
-            	android:src="@drawable/bar" 
-            	android:layout_toRightOf="@+id/progressbar" 
-            	android:layout_marginTop="18dp"
-            	android:layout_marginLeft="40dp" 
-            	android:id="@+id/line3">
+            	android:layout_width="50dp" 
+            	android:src="@drawable/image0" 
+            	android:id="@+id/MassStorageStatus" 
+            	android:layout_height="50dp" 
+            	android:layout_marginTop="30dp"
+            	android:layout_centerVertical="true"
+            	android:layout_marginLeft="42dp">
             </ImageView>
             
             <ImageView 
             	android:layout_width="50dp" 
             	android:src="@drawable/image0" 
-            	android:id="@+id/LEDslider" 
+            	android:id="@+id/ShakerStatus" 
             	android:layout_height="50dp" 
-            	android:layout_marginTop="30dp"
-            	android:layout_toRightOf="@+id/line3" 
-            	android:layout_centerVertical="true"
-            	android:layout_marginLeft="15dp">
+            	android:layout_marginLeft="42dp"
+            	android:layout_toRightOf="@+id/MassStorageStatus" 
+            	android:layout_alignTop="@+id/MassStorageStatus" 
+            	android:layout_alignBottom="@+id/MassStorageStatus"
+            	android:layout_centerVertical="true">
+            </ImageView>
+            
+             <ImageView 
+            	android:layout_width="50dp" 
+            	android:src="@drawable/image0" 
+            	android:id="@+id/SensorStatus" 
+            	android:layout_height="50dp" 
+            	android:layout_marginLeft="42dp"
+            	android:layout_toRightOf="@+id/ShakerStatus" 
+            	android:layout_alignTop="@+id/ShakerStatus" 
+            	android:layout_alignBottom="@+id/ShakerStatus"
+            	android:layout_centerVertical="true">
             </ImageView>
         </RelativeLayout>
         
         <RelativeLayout  
-        	android:layout_height="230dp" 
+        	android:layout_height="310dp" 
         	android:id="@+id/frameLayoutShaker" 
         	android:layout_width="match_parent" 
         	android:background="@drawable/border2">
@@ -273,8 +304,20 @@
             	android:layout_marginTop="140dp"
             	android:textStyle="bold">
             </TextView>
+            
+        	<TextView 
+            	android:id="@+id/DebugView" 
+            	android:textAppearance="?android:attr/textAppearanceMedium"
+            	android:layout_width="wrap_content" 
+            	android:layout_height="80dp"
+            	android:layout_alignParentLeft="true" 
+            	android:text="debug..."
+            	android:layout_marginLeft="25dp"
+            	android:layout_marginTop="220dp"
+            	android:textStyle="bold">
+            </TextView>
                                  	
-            <ImageView 
+           <!--  <ImageView 
             	android:layout_width="wrap_content" 
             	android:layout_height="wrap_content" 
             	android:src="@drawable/bar" 
@@ -282,7 +325,7 @@
             	android:layout_marginTop="18dp"
             	android:layout_marginLeft="40dp" 
             	android:id="@+id/line4">
-            </ImageView>
+            </ImageView> -->
             
             <!-- <Button 
                android:layout_width="140dp" 

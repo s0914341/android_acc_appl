@@ -7,9 +7,11 @@ import java.io.IOException;
 
 import FTDI.LED.R.drawable;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbAccessory;
@@ -38,9 +40,9 @@ public class LEDActivity extends Activity{
 	public UsbManager usbmanager;
 	public UsbAccessory usbaccessory;
 	public PendingIntent mPermissionIntent;
-	public ParcelFileDescriptor filedescriptor;
-	public FileInputStream inputstream;
-	public FileOutputStream outputstream;
+	public ParcelFileDescriptor filedescriptor = null;
+	public FileInputStream inputstream = null;
+	public FileOutputStream outputstream = null;
 	public boolean mPermissionRequestPending = true;
 	
 	//public Handler usbhandler;
@@ -68,6 +70,11 @@ public class LEDActivity extends Activity{
     
     public EditText etInput; //shaker command input
     public TextView shaker_return;
+    public TextView debug_view;
+    public int get_experiment_data_start = 0;
+    public int script_length = 0;
+    public int script_offset = 0;
+    public byte[] script;
     
     /*thread to listen USB data*/
     public handler_thread handlerThread;
@@ -98,6 +105,8 @@ public class LEDActivity extends Activity{
 		led4 = (ImageView) findViewById(R.id.LED4);
 		
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
+		debug_view = (TextView)findViewById(R.id.DebugView);
+		script = null;
 	//	str = new String("testtest");
                
         button1 = (ImageButton) findViewById(R.id.Button1);
@@ -116,9 +125,17 @@ public class LEDActivity extends Activity{
         			else{
         				led1.setImageResource(drawable.image0);		
         		}
-        			
         		
-        		UsbCommandSetExperimentStatus(android_accessory_packet.STATUS_EXPERIMENT_START, 1);
+        		file_operation write_file = new file_operation("Sensor", "sensor", true);
+        		try {
+        			write_file.delete_file(write_file.generate_filename());
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}
+        		byte[] data = new byte[1];
+        		data[0] = android_accessory_packet.STATUS_EXPERIMENT_START;
+        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS, android_accessory_packet.STATUS_OK, data, 1);
         	}
 		});
         
@@ -139,7 +156,17 @@ public class LEDActivity extends Activity{
         				led2.setImageResource(drawable.image0);		
         		}
         		
-        		WriteUsbData(ibutton);	
+        		file_operation write_file = new file_operation("GetExperimentData", "ExperimentData", true);
+        		try {
+        			write_file.delete_file(write_file.generate_filename());
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}
+        		byte[] data = new byte[1];
+        		data[0] = 0;
+        		get_experiment_data_start = 1;
+        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA, android_accessory_packet.STATUS_OK, data, 0);
 			}
 		});
         
@@ -159,7 +186,27 @@ public class LEDActivity extends Activity{
         			else{
         				led3.setImageResource(drawable.image0);		
         		}
-        		WriteUsbData(ibutton);	
+        		
+        		file_operation read_file = new file_operation("Script", "Script", true);
+		    	try {
+		    		script_length = read_file.open_read_file_byte_array(read_file.generate_filename_no_date());
+		    		
+		    		if (script_length > 0) {
+		    		    script = new byte[script_length];
+		    		    read_file.read_file_byte_array(script);
+		    		    byte[] data = new byte[1];
+		        		data[0] = ibutton;
+		        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, android_accessory_packet.STATUS_START, data, 0);	
+		        		Toast.makeText(LEDActivity.this, "Set experiment script start", Toast.LENGTH_SHORT).show(); 
+		    		} else {
+		    			Toast.makeText(LEDActivity.this, "Get script lenght < 0", Toast.LENGTH_SHORT).show(); 
+		    			Log.d("LED", "open script fail");
+		    		}
+				} catch (IOException e) {
+					Toast.makeText(LEDActivity.this, "read_file constructor fail", Toast.LENGTH_SHORT).show(); 
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
         
@@ -178,7 +225,10 @@ public class LEDActivity extends Activity{
         			else{
         				led4.setImageResource(drawable.image0);		
         		}
-        		WriteUsbData(ibutton);	
+        		
+        		byte[] data = new byte[1];
+        		data[0] = ibutton;
+        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_KEYPAD, android_accessory_packet.STATUS_OK, data, 1);
 			}
 		});  
         
@@ -190,7 +240,7 @@ public class LEDActivity extends Activity{
                Toast.makeText(LEDActivity.this, etInput.getText(), Toast.LENGTH_SHORT).show(); 
                String cmd = etInput.getText().toString();  
                byte[] usb_cmd = cmd.getBytes();
-               WriteUsbCommandShaker(usb_cmd, cmd.length());
+               WriteUsbCommand(android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND, android_accessory_packet.STATUS_OK, usb_cmd, cmd.length());
                return true; 
             } 
            return false; 
@@ -273,6 +323,37 @@ public class LEDActivity extends Activity{
 			}
         });
     }
+    
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {   //確定按下退出鍵
+            ConfirmExit(); //呼叫ConfirmExit()函數
+            return true;  
+     }  
+        
+     return super.onKeyDown(keyCode, event);  
+   }
+
+  
+
+   public void ConfirmExit(){
+        AlertDialog.Builder ad=new AlertDialog.Builder(LEDActivity.this); //創建訊息方塊
+        ad.setTitle("離開");
+        ad.setMessage("確定要離開?");
+        ad.setPositiveButton("是", new DialogInterface.OnClickListener() { //按"是",則退出應用程式
+            public void onClick(DialogInterface dialog, int i) {
+            	CloseAccessory();
+            	//LEDActivity.this.finish();//關閉activity
+       }
+     });
+        ad.setNegativeButton("否",new DialogInterface.OnClickListener() { //按"否",則不執行任何操作
+            public void onClick(DialogInterface dialog, int i) {
+
+       }
+
+     });
+
+        ad.show();//顯示訊息視窗
+  }
     
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -436,16 +517,18 @@ public class LEDActivity extends Activity{
 	
 	private void CloseAccessory() {
 		try{
-			filedescriptor.close();
+			if (filedescriptor != null)
+			    filedescriptor.close();
 		}catch (IOException e){}
 		
 		try {
-			inputstream.close();
+			if (inputstream != null)
+			    inputstream.close();
 		} catch(IOException e){}
 		
 		try {
-			outputstream.close();
-			
+			if (outputstream != null)
+			    outputstream.close();
 		}catch(IOException e){}
 		/*FIXME, add the notfication also to close the application*/
 		//unregisterReceiver(mUsbReceiver);
@@ -486,17 +569,61 @@ public class LEDActivity extends Activity{
     		    	System.arraycopy(handle_receive_data.buffer, handle_receive_data.DATA_START, byte_str, 0, handle_receive_data.get_data_size());
     		    	String str = new String(byte_str);
     		    	
-    		   // 	String str = new String();
-    		   // 	str = String.format("[0]=%d, [1]=%d, [2]=%d, [3]=%d, [4]=%d\n[5]=%d, [6]=%d, [7]=%d, [8]=%d, [9]=%d", recv[0], recv[1],
-    		   // 			recv[2],recv[3],recv[4],recv[5],recv[6],recv[7],recv[8],recv[9]);
-    		   // 	str.format("test123\r\n");
     		    	shaker_return.setText(str);
     			break;
     			
     		    case android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA:
+    		    	if (1 == get_experiment_data_start) {
+    		    	    int len = handle_receive_data.get_Len_value();
+    		    		byte[] experiment_data = new byte[len];
+        		    	System.arraycopy(handle_receive_data.buffer, handle_receive_data.DATA_START, experiment_data, 0, len); 
+        		    	//String debug_str;
+        		    	//debug_str = String.format("prefix:%d, type:%d, status:%d, len:%d", handle_receive_data.get_Prefix_value(),
+        		    	//   		handle_receive_data.get_Type_value(), handle_receive_data.get_Status_value(), handle_receive_data.get_Len_value());
+        		    	//debug_view.setText(debug_str);
+        		    	//String experiment_str = new String(experiment_data);
+        		    	file_operation write_file = new file_operation("GetExperimentData", "ExperimentData", true);
+        		    	try {
+        		            write_file.create_write_file_byte_array(write_file.generate_filename());
+        		    		write_file.write_file_byte_array(experiment_data);
+        		    		write_file.flush_close_file_byte_array();
+        				} catch (IOException e) {
+        					// TODO Auto-generated catch block
+        					e.printStackTrace();
+        				}
+        		    	
+        		    	if (android_accessory_packet.STATUS_OK == handle_receive_data.get_Status_value()) {
+        		    		get_experiment_data_start = 0;
+        		    		Toast.makeText(LEDActivity.this, "Get experiment data complete", Toast.LENGTH_SHORT).show(); 
+        		    	}
+    		    	
+    		    	}		    	
         		break;
         		
     		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT:
+    		    	if (script_offset < script_length) {
+    		    		int len = 0;
+    		    		byte status = android_accessory_packet.STATUS_HAVE_DATA;
+    		    		byte[] script_buffer;
+    		    		if ((script_length-script_offset) > android_accessory_packet.DATA_SIZE)
+    		    			len = android_accessory_packet.DATA_SIZE;
+    		    		else
+    		    			len = script_length-script_offset;
+    		    		
+    		    		script_buffer = new byte[len];
+    		    		System.arraycopy(script, script_offset, script_buffer, 0, len);
+    		    		if ((script_offset+len) == script_length)
+    		    			status = android_accessory_packet.STATUS_OK;
+    		    		else
+    		    			status = android_accessory_packet.STATUS_HAVE_DATA;
+    		    		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, android_accessory_packet.STATUS_HAVE_DATA, script_buffer, len);
+    		    		script_offset += len;
+    		    	} else {
+    		    		script_offset = 0;
+    		    		script_length = 0;
+    		    		script = null;
+    		    		Toast.makeText(LEDActivity.this, "Set experiment script end", Toast.LENGTH_SHORT).show(); 
+    		    	}
             	break;
     			
     		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS:
@@ -563,52 +690,32 @@ public class LEDActivity extends Activity{
 		}
 	}
 	
-	public void WriteUsbData(byte iButton){	
-		int len = 1;
-		byte[] data = new byte[1];
-		data[0] = iButton;
+	public void WriteUsbCommand(byte type, byte status, byte[] data, int len){	
 		
+		acc_pkg_transfer.set_Type(type);
+		acc_pkg_transfer.set_Status(status);
 		acc_pkg_transfer.copy_to_data(data, len);
-		acc_pkg_transfer.set_Type((byte)android_accessory_packet.DATA_TYPE_KEYPAD);
-		acc_pkg_transfer.set_Len((byte)1);
+		acc_pkg_transfer.set_Len((byte)len);
 		
-		Log.d("LED", "pressed " +iButton);
+		//Log.d("LED", "pressed " +iButton);
+		/*switch(cmd) {
+		    case  android_accessory_packet.DATA_TYPE_KEYPAD:
+		    	acc_pkg_transfer.copy_to_data(data, len);
+		    	break;
+		    	
+		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS:
+		    	break;
+		    	
+		    case android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA:
+		    	break;
+		    	
+		    case android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND:
+		    	break;
+		}*/
 		
 		try{
 			if(outputstream != null){
 				outputstream.write(acc_pkg_transfer.buffer, 0,  len + acc_pkg_transfer.get_header_size());
-			}
-		}
-		catch (IOException e) {}		
-	}
-	
-	public void UsbCommandSetExperimentStatus(byte cmd, int len){	
-		byte[] data = new byte[1];
-		data[0] = cmd;
-		acc_pkg_transfer.copy_to_data(data, len);
-		acc_pkg_transfer.set_Type((byte)android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS);
-		acc_pkg_transfer.set_Len((byte)len);
-		
-		//Log.d("Shaker", "pressed " +iButton);
-
-		try{
-			if(outputstream != null){
-				outputstream.write(acc_pkg_transfer.buffer, 0, len + acc_pkg_transfer.get_header_size());
-			}
-		}
-		catch (IOException e) {}		
-	}
-	
-	public void WriteUsbCommandShaker(byte[] cmd, int len){	
-		acc_pkg_transfer.copy_to_data(cmd, len);
-		acc_pkg_transfer.set_Type((byte)android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND);
-		acc_pkg_transfer.set_Len((byte)len);
-		
-		//Log.d("Shaker", "pressed " +iButton);
-
-		try{
-			if(outputstream != null){
-				outputstream.write(acc_pkg_transfer.buffer, 0, len + acc_pkg_transfer.get_header_size());
 			}
 		}
 		catch (IOException e) {}		

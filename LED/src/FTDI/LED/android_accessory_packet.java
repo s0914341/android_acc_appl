@@ -17,6 +17,11 @@ public class android_accessory_packet {
 	public static final byte  STATUS_EXPERIMENT_STORAGE_FULL = 4;
 	public static final byte  STATUS_EXPERIMENT_FINISH = 5;
 	
+	public static final byte  STATUS_OK = 0;
+	public static final byte  STATUS_FAIL = 1;
+	public static final byte  STATUS_HAVE_DATA = 2; 
+	public static final byte  STATUS_START = 3; 
+	
 	
 	public static final int PREFIX = 0;
 	public static final int TYPE = 1; 
@@ -83,8 +88,12 @@ public class android_accessory_packet {
 	    return buffer[TYPE];
 	}
 	
+	public byte get_Status_value() {
+	    return buffer[STATUS];
+	}
+	
 	public int get_Len_value() {
-	    return (int)buffer[LEN];
+	    return (int)buffer[LEN]&0xff;
 	}
 	
 	public int get_size() {

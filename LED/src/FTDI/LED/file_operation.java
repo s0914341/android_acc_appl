@@ -2,6 +2,8 @@ package FTDI.LED;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -19,6 +21,8 @@ public class file_operation {
 	File file_MetaData;
 	File file;
 	static BufferedWriter file_buf;
+	static FileOutputStream fos;
+	static FileInputStream fis;
 	//SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
 	SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 	static SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -67,6 +71,21 @@ public class file_operation {
 		}
 	}
 	
+	public void flush_close_file_byte_array() {
+		try {
+			if (fos != null) {
+				fos.flush();
+				fos.close();
+				Flush_File = "log file saved: " + file.getPath(); 
+			//	Show_Toast_Msg(Flush_File);
+				fos = null;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void write_file_msg(String line) {
 		if (file_buf != null) {
 			String line_text = df1.format(new Date()) + "  " + line;
@@ -80,10 +99,28 @@ public class file_operation {
 		}
 	}
 	
+	public void write_file_byte_array(byte[] data) {
+		if (fos != null) {
+			try {
+				fos.write(data);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	 /* file naming format logyyyymmdd-hhmmss.txt*/
 	public String generate_filename() {
 		String filename;
 		filename = CreateFileName + df.format(new Date()) + ".txt";
+		Log.d(Tag, filename);
+		return filename;
+	}
+	
+	public String generate_filename_no_date() {
+		String filename;
+		filename = CreateFileName + ".txt";
 		Log.d(Tag, filename);
 		return filename;
 	}
@@ -107,4 +144,74 @@ public class file_operation {
 			Log.d(Tag, "Can't found external sdcard ");
 		}
 	}
+	
+	public void delete_file(String filename) throws IOException {
+		if (sdcard.exists()) {
+			if (!file_MetaData.exists()) {
+				Log.d(Tag, "sdcard directory exist:" + Boolean.toString(file_MetaData.exists()));
+			} else {
+			    file = new File(file_MetaData, filename);
+			    Boolean deleted = file.delete();
+			    
+			    Log.d(Tag, "delete file:" + deleted.toString());
+		    }
+		} else {
+			Log.d(Tag, "Can't found external sdcard ");
+		}
+	}
+	
+	public void create_write_file_byte_array(String filename) throws IOException {
+		if (sdcard.exists()) {
+			if (!file_MetaData.exists()) {
+		        file_MetaData.mkdirs();
+				Log.d(Tag, "sdcard directory exist:" + Boolean.toString(file_MetaData.exists()));
+			}
+			
+			if (file_MetaData.exists()) {
+			    file = new File(file_MetaData, filename);
+			    fos = new FileOutputStream(file.getAbsolutePath(), file_append);   
+		    } else {
+		    	fos = null;
+				Log.d(Tag, "Can't create the byte file");
+			}
+		} else {
+			fos = null;
+			Log.d(Tag, "Can't found external sdcard ");
+		}
+	}
+	
+	public int open_read_file_byte_array(String filename) throws IOException {
+		int ret = 0;
+		
+		if (sdcard.exists()) {
+			if (!file_MetaData.exists()) {
+				ret = -1;
+				fis = null;
+				Log.d(Tag, "sdcard directory exist:" + Boolean.toString(file_MetaData.exists()));
+			} else {
+			    file = new File(file_MetaData, filename);
+			    fis = new FileInputStream(file.getAbsolutePath());  
+			    ret = (int)file.length();
+		    }
+		} else {
+			ret = -2;
+			fis = null;
+			Log.d(Tag, "Can't found external sdcard ");
+		}
+		
+		return ret;
+	}
+	
+	public void read_file_byte_array(byte[] data) {
+		if (fis != null) {
+			try {
+				fis.read(data);
+				fis.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }
