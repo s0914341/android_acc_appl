@@ -11,7 +11,6 @@ import java.util.Date;
 
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
 public class file_operation {
 	public final String Tag = "ODMonitor_Sensor";

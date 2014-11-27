@@ -5,9 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.achartengine.chartdemo.demo.chart.AverageTemperatureChart;
+import org.achartengine.chartdemo.demo.chart.IDemoChart;
+
 import FTDI.LED.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,7 +29,9 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -45,10 +51,6 @@ public class LEDActivity extends Activity{
 	public FileOutputStream outputstream = null;
 	public boolean mPermissionRequestPending = true;
 	
-	//public Handler usbhandler;
-	//public byte[] usbdata;
-	//public byte[] writeusbdata;
-	//public byte[] writeusbcommand;
 	public byte  ledPrevMap = 0x00;
 	//public byte[] usbdataIN;
 	public android_accessory_packet acc_pkg_transfer = new android_accessory_packet(android_accessory_packet.INIT_PREFIX_VALUE);
@@ -68,6 +70,8 @@ public class LEDActivity extends Activity{
     public ImageView led4;
     public ImageView ledvolume;
     
+    public ImageView led_connect_status;
+    
     public EditText etInput; //shaker command input
     public TextView shaker_return;
     public TextView debug_view;
@@ -75,6 +79,7 @@ public class LEDActivity extends Activity{
     public int script_length = 0;
     public int script_offset = 0;
     public byte[] script;
+    private IDemoChart[] mCharts = new IDemoChart[] { new AverageTemperatureChart() };
     
     /*thread to listen USB data*/
     public handler_thread handlerThread;
@@ -86,10 +91,6 @@ public class LEDActivity extends Activity{
     {     
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
-       // usbdata = new byte[4]; 
-       // writeusbdata = new byte[4];
-      //  writeusbcommand = new byte[24];
         
         usbmanager = (UsbManager) getSystemService(Context.USB_SERVICE);
         Log.d("LED", "usbmanager" +usbmanager);
@@ -107,6 +108,7 @@ public class LEDActivity extends Activity{
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
 		script = null;
+		led_connect_status = (ImageView)findViewById(R.id.ConnectStatus);
 	//	str = new String("testtest");
                
         button1 = (ImageButton) findViewById(R.id.Button1);
@@ -226,9 +228,11 @@ public class LEDActivity extends Activity{
         				led4.setImageResource(drawable.image0);		
         		}
         		
-        		byte[] data = new byte[1];
-        		data[0] = ibutton;
-        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_KEYPAD, android_accessory_packet.STATUS_OK, data, 1);
+        		//byte[] data = new byte[1];
+        		//data[0] = ibutton;
+        		//WriteUsbCommand(android_accessory_packet.DATA_TYPE_KEYPAD, android_accessory_packet.STATUS_OK, data, 1);
+        		//reconnect_to_accessory();
+        		show_chart_dialog();
 			}
 		});  
         
@@ -246,9 +250,10 @@ public class LEDActivity extends Activity{
            return false; 
          } 
          }); 
-        
+       
+ /*
         volumecontrol = (SeekBar)findViewById(R.id.seekBar1);
-        
+  
         //set the max value to 50
         volumecontrol.setMax(50);
         
@@ -322,11 +327,31 @@ public class LEDActivity extends Activity{
 				}
 			}
         });
+        */
+    }
+    
+    public void show_chart_dialog() {
+      /*  final Dialog dialog = new Dialog(context);
+ 	    dialog.setContentView(R.layout.dialog);
+ 	    dialog.setTitle("Title...");
+ 	   
+ 	    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
+ 		// if button is clicked, close the custom dialog
+ 	    dialogButton.setOnClickListener(new OnClickListener() {
+ 	        public void onClick(View v) {
+ 				dialog.dismiss();
+ 			}
+ 		});
+
+ 		dialog.show();*/
+    	Intent intent = null;
+    	intent = mCharts[0].execute(this);
+    	startActivity(intent);
     }
     
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {   //確定按下退出鍵
-            ConfirmExit(); //呼叫ConfirmExit()函數
+            ConfirmExit();
             return true;  
      }  
         
@@ -337,20 +362,21 @@ public class LEDActivity extends Activity{
 
    public void ConfirmExit(){
         AlertDialog.Builder ad=new AlertDialog.Builder(LEDActivity.this); //創建訊息方塊
-        ad.setTitle("離開");
-        ad.setMessage("確定要離開?");
-        ad.setPositiveButton("是", new DialogInterface.OnClickListener() { //按"是",則退出應用程式
+        ad.setTitle("EXIT");
+        ad.setMessage("Are you sure want to exit?");
+        ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() { //按"是",則退出應用程式
             public void onClick(DialogInterface dialog, int i) {
             	CloseAccessory();
             	//LEDActivity.this.finish();//關閉activity
-       }
-     });
-        ad.setNegativeButton("否",new DialogInterface.OnClickListener() { //按"否",則不執行任何操作
+            }
+        });
+        
+        ad.setNegativeButton("No",new DialogInterface.OnClickListener() { //按"否",則不執行任何操作
             public void onClick(DialogInterface dialog, int i) {
 
-       }
+           }
 
-     });
+        });
 
         ad.show();//顯示訊息視窗
   }
@@ -361,48 +387,56 @@ public class LEDActivity extends Activity{
 		inflater.inflate(R.menu.setting_menu, menu);
 		return true;
 	}
+    
+    public void reconnect_to_accessory() {
+    	Intent intent = getIntent();
+    	
+		if (inputstream != null && outputstream != null) {
+			return;
+		}
+		
+		UsbAccessory[] accessories = usbmanager.getAccessoryList();
+		UsbAccessory accessory = (accessories == null ? null : accessories[0]);
+		if (accessory != null) {
+			if (usbmanager.hasPermission(accessory)) {
+				OpenAccessory(accessory);
+			} 
+			else
+			{
+				synchronized (mUsbReceiver) {
+					if (!mPermissionRequestPending) {
+						usbmanager.requestPermission(accessory,
+								mPermissionIntent);
+						mPermissionRequestPending = true;
+					}
+			}
+		}
+		} else {}
+    }
         
         
     @Override
-    public void onResume()
-    {
+    public void onResume() {
     		super.onResume();
-    		Intent intent = getIntent();
-    		if (inputstream != null && outputstream != null) {
-    			return;
-    		}
-    		
-    		UsbAccessory[] accessories = usbmanager.getAccessoryList();
-    		UsbAccessory accessory = (accessories == null ? null : accessories[0]);
-    		if (accessory != null) {
-    			if (usbmanager.hasPermission(accessory)) {
-    				OpenAccessory(accessory);
-    			} 
-    			else
-    			{
-    				synchronized (mUsbReceiver) {
-    					if (!mPermissionRequestPending) {
-    						usbmanager.requestPermission(accessory,
-    								mPermissionIntent);
-    						mPermissionRequestPending = true;
-    					}
-    			}
-    		}
-    		} else {}
+    		reconnect_to_accessory();
+    }
+    
+    @Override
+    public void onPause() {
+    	Log.d("LED", "on Pause");
+    	super.onPause();
     }
     
 	@Override
-	public void onDestroy()
-	{
-		unregisterReceiver(mUsbReceiver);
+	public void onDestroy() {
+		//unregisterReceiver(mUsbReceiver);
 		//CloseAccessory();
 		super.onDestroy();
 	}
 	
 	
 	/*open the accessory*/
-	private void OpenAccessory(UsbAccessory accessory)
-	{
+	private void OpenAccessory(UsbAccessory accessory) {
 		filedescriptor = usbmanager.openAccessory(accessory);
 		if(filedescriptor != null){
 			usbaccessory = accessory;
@@ -417,6 +451,7 @@ public class LEDActivity extends Activity{
 		
 		handlerThread = new handler_thread(handler, inputstream);
 		handlerThread.start();
+		led_connect_status.setImageResource(drawable.image100);
 		
 	} /*end OpenAccessory*/
 	
@@ -458,7 +493,7 @@ public class LEDActivity extends Activity{
 		}
 	}
 	
-	public void Slider_Receive(byte[] data) {
+	/*public void Slider_Receive(byte[] data) {
 		ledvolume = (ImageView) findViewById(R.id.LEDvolume);
 		if((int)data[3] == 0)
 		{
@@ -496,7 +531,7 @@ public class LEDActivity extends Activity{
 		{
 			ledvolume.setImageResource(drawable.image100);
 		}
-	}
+	}*/
 	
 	public void SensorData_Receive(android_accessory_packet rec) {
 		file_operation write_file = new file_operation("Sensor", "sensor", true);
@@ -529,15 +564,17 @@ public class LEDActivity extends Activity{
 		try {
 			if (outputstream != null)
 			    outputstream.close();
-		}catch(IOException e){}
+		} catch(IOException e){}
+		
 		/*FIXME, add the notfication also to close the application*/
-		//unregisterReceiver(mUsbReceiver);
+		unregisterReceiver(mUsbReceiver);
 		//CloseAccessory();
 		//super.onDestroy();
 		filedescriptor = null;
 		inputstream = null;
 		outputstream = null;
-	
+		led_connect_status.setImageResource(drawable.image0);
+		
 		System.exit(0);
 	}
 		
