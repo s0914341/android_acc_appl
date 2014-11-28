@@ -28,6 +28,7 @@
             	android:resource="@xml/accessory_filter">
             </meta-data>
         </activity>
+        <activity android:name="org.achartengine.GraphicalActivity" />
         
        <!--  <receiver android:name=".LEDActivity.mUsbReceiver">
             <intent-filter>

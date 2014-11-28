@@ -5,6 +5,9 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
+<<<<<<< HEAD
 	<classpathentry kind="lib" path="D:/FTDI/android_workspace/android_acc_appl/LED/libs/achartengine-1.1.0.jar"/>
+=======
+>>>>>>> e7bb0db8b0466ec286af8ece18ddd7dcb8246c9a
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
