@@ -5,8 +5,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.achartengine.ChartFactory;
+import org.achartengine.GraphicalView;
+import org.achartengine.chart.PointStyle;
 import org.achartengine.chartdemo.demo.chart.AverageTemperatureChart;
 import org.achartengine.chartdemo.demo.chart.IDemoChart;
+import org.achartengine.chartdemo.demo.chart.XYChartBuilder;
+import org.achartengine.model.SeriesSelection;
+import org.achartengine.model.XYMultipleSeriesDataset;
+import org.achartengine.model.XYSeries;
+import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
 
 import FTDI.LED.R.drawable;
 import android.app.Activity;
@@ -18,6 +27,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
@@ -31,10 +41,12 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -80,6 +92,12 @@ public class LEDActivity extends Activity{
     public int script_offset = 0;
     public byte[] script;
     private IDemoChart[] mCharts = new IDemoChart[] { new AverageTemperatureChart() };
+    final Context context = this;
+    private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
+    private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
+    private XYSeriesRenderer mCurrentRenderer;
+    private XYSeries mCurrentSeries;
+    private GraphicalView mChartView;
     
     /*thread to listen USB data*/
     public handler_thread handlerThread;
@@ -331,21 +349,74 @@ public class LEDActivity extends Activity{
     }
     
     public void show_chart_dialog() {
-      /*  final Dialog dialog = new Dialog(context);
- 	    dialog.setContentView(R.layout.dialog);
+    /*    final Dialog dialog = new Dialog(context);
+ 	    dialog.setContentView(R.layout.xy_layout);
  	    dialog.setTitle("Title...");
- 	   
- 	    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
+ 	*/   
+ 	/*    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
  		// if button is clicked, close the custom dialog
  	    dialogButton.setOnClickListener(new OnClickListener() {
  	        public void onClick(View v) {
  				dialog.dismiss();
  			}
- 		});
+ 		});*/
+ 	    
+ 	   
+  /*   mRenderer.setApplyBackgroundColor(true);
+ 	    mRenderer.setBackgroundColor(Color.argb(100, 50, 50, 50));
+ 	    mRenderer.setAxisTitleTextSize(16);
+ 	    mRenderer.setChartTitleTextSize(20);
+ 	    mRenderer.setLabelsTextSize(15);
+ 	    mRenderer.setLegendTextSize(15);
+ 	    mRenderer.setMargins(new int[] { 20, 30, 15, 0 });
+ 	    mRenderer.setZoomButtonsVisible(true);
+ 	    mRenderer.setPointSize(5);
+ 	    
+ 	   String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);
+       // create a new series of data
+       XYSeries series = new XYSeries(seriesTitle);
+       mDataset.addSeries(series);
+       mCurrentSeries = series;
+       // create a new renderer for the new series
+       XYSeriesRenderer renderer = new XYSeriesRenderer();
+       mRenderer.addSeriesRenderer(renderer);
+       // set some renderer properties
+       renderer.setPointStyle(PointStyle.CIRCLE);
+       renderer.setFillPoints(true);
+       renderer.setDisplayChartValues(true);
+       renderer.setDisplayChartValuesDistance(10);
+       mCurrentRenderer = renderer;
+ 	    
+ 	   LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+ 	   mChartView = ChartFactory.getLineChartView(context, mDataset, mRenderer);
+       // enable the chart click events
+       mRenderer.setClickEnabled(true);
+       mRenderer.setSelectableBuffer(10);
+       mChartView.setOnClickListener(new View.OnClickListener() {
+           public void onClick(View v) {
+             // handle the click event on the chart
+             SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
+             if (seriesSelection == null) {
+               Toast.makeText(context, "No chart element", Toast.LENGTH_SHORT).show();
+             } else {
+               // display information of the clicked point
+               Toast.makeText(
+            		   context,
+                   "Chart element in series index " + seriesSelection.getSeriesIndex()
+                       + " data point index " + seriesSelection.getPointIndex() + " was clicked"
+                       + " closest point value X=" + seriesSelection.getXValue() + ", Y="
+                       + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();
+             }
+           }
+         });
+       layout.addView(mChartView, new LayoutParams(LayoutParams.FILL_PARENT,
+    	          LayoutParams.FILL_PARENT));
 
  		dialog.show();*/
     	Intent intent = null;
-    	intent = mCharts[0].execute(this);
+    	//intent = mCharts[0].execute(this);
+    	intent = new Intent(this, XYChartBuilder.class);
+    	
     	startActivity(intent);
     }
     

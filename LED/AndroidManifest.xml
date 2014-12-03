@@ -28,7 +28,13 @@
             	android:resource="@xml/accessory_filter">
             </meta-data>
         </activity>
+       <!--  <activity android:name="org.achartengine.chartdemo.demo.chart.XYChartBuilder" /> -->
         <activity android:name="org.achartengine.GraphicalActivity" />
+        <activity
+	android:name="org.achartengine.chartdemo.demo.chart.XYChartBuilder"
+	android:theme="@android:style/Theme.Dialog" >
+	</activity>
+- See more at: http://www.javabeat.net/dialog-activity-android/#sthash.rLrdENcY.dpuf
         
        <!--  <receiver android:name=".LEDActivity.mUsbReceiver">
             <intent-filter>

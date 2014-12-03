@@ -61,11 +61,12 @@ public final class R {
         public static final int ViewMassStorage=0x7f070012;
         public static final int ViewSensor=0x7f070014;
         public static final int ViewShaker=0x7f070013;
+        public static final int chart=0x7f07001f;
         public static final int etInput=0x7f07001c;
         public static final int frameLayout2=0x7f070010;
         public static final int frameLayoutShaker=0x7f07001a;
-        public static final int item1=0x7f07001f;
-        public static final int item2=0x7f070020;
+        public static final int item1=0x7f070020;
+        public static final int item2=0x7f070021;
         public static final int led_imagebutton=0x7f070001;
         public static final int line=0x7f070009;
         public static final int relativeLayout1=0x7f070002;
@@ -80,6 +81,7 @@ public final class R {
         public static final int dialog=0x7f030000;
         public static final int led_appwidget_layout=0x7f030001;
         public static final int main=0x7f030002;
+        public static final int xy_layout=0x7f030003;
     }
     public static final class menu {
         public static final int setting_menu=0x7f060000;
