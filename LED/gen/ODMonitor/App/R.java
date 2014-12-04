@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package FTDI.LED;
+package ODMonitor.App;
 
 public final class R {
     public static final class attr {

@@ -1,4 +1,4 @@
-package FTDI.LED;
+package ODMonitor.App;
 
 public class android_accessory_packet {
 	public static final byte DATA_TYPE_KEYPAD = 0;
@@ -39,7 +39,7 @@ public class android_accessory_packet {
 
 	public byte[] buffer = new byte[TOTAL_SIZE]; /* data content */
 	
-	android_accessory_packet(int init) {
+	public android_accessory_packet(int init) {
 		if (INIT_PREFIX_VALUE == init)
 		    buffer[PREFIX] = PREFIX_VALUE;
 	}

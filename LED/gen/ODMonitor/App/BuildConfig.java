@@ -1,5 +1,5 @@
 /** Automatically generated file. DO NOT MODIFY */
-package FTDI.LED;
+package ODMonitor.App;
 
 public final class BuildConfig {
     public final static boolean DEBUG = true;

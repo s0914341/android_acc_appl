@@ -15,6 +15,8 @@
  */
 package org.achartengine.chartdemo.demo.chart;
 
+import java.io.IOException;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
@@ -24,11 +26,18 @@ import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
-import FTDI.LED.R;
+import ODMonitor.App.LEDActivity;
+import ODMonitor.App.R;
+import ODMonitor.App.android_accessory_packet;
+import ODMonitor.App.file_operation;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -44,6 +53,7 @@ public class XYChartBuilder extends Activity {
   private XYSeriesRenderer mCurrentRenderer;
   /** The chart view that displays the data. */
   private GraphicalView mChartView;
+  public data_read_thread data_read_thread;
 
   @Override
   protected void onSaveInstanceState(Bundle outState) {
@@ -70,7 +80,8 @@ public class XYChartBuilder extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.xy_layout);
-
+    getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+    Thread.currentThread().setName("Thread_XYChartBuilder");
     // set some properties on the main renderer
     mRenderer.setApplyBackgroundColor(true);
     mRenderer.setBackgroundColor(Color.argb(100, 50, 50, 50));
@@ -83,18 +94,81 @@ public class XYChartBuilder extends Activity {
     mRenderer.setPointSize(5);
     
     CreateNewSeries();
-    SerialAdd(5,5);
-    SerialAdd(15,5);
-    SerialAdd(25,35);
-    SerialAdd(35,55);
+    mCurrentSeries.add(0, 0);
+    
+    data_read_thread = new data_read_thread(handler);
+    data_read_thread.start();
   }
 
   public void SerialAdd(double x, double y) {
       // add a new data point to the current series
       mCurrentSeries.add(x, y);
       // repaint the chart such as the newly added point to be visible
-    //  mChartView.repaint();
+      mChartView.repaint();
   }
+  
+  final Handler handler =  new Handler() {
+  	@Override 
+  	public void handleMessage(Message msg) {
+  		SerialAdd((double)msg.arg1, (double)msg.arg2);
+  	}
+  };
+  
+  private class data_read_thread  extends Thread {
+		Handler mHandler;
+		
+		data_read_thread(Handler h){
+			mHandler = h;
+		}
+		
+		public void run() {
+			byte[] experiment_data;
+			byte last_index = 0;
+			byte i;
+			int len = 0;
+			file_operation read_file = new file_operation("testExperimentData", "testExperimentData20141204", true);
+			
+			while(true) {
+				Message msg = mHandler.obtainMessage();
+				try {
+					len = read_file.open_read_file_byte_array(read_file.generate_filename_no_date());
+		    		
+		    		if (len > 0) {
+		    			experiment_data = new byte[len];
+		    		    read_file.read_file_byte_array(experiment_data);
+		    		    
+		    		    for(i = 0; i < 250; i++) {
+							if (i*3 < len) {
+							    if (experiment_data[i*3] > last_index) {
+							    	msg.arg1 = experiment_data[i*3+1];
+							    	msg.arg2 = experiment_data[i*3+2];
+							    	mHandler.sendMessage(msg);
+							    	last_index = experiment_data[i*3];
+							        break;
+							    }
+							} else {
+							    break;
+							}
+						}
+		    		} else {
+		    			Log.d("data_read_thread", "open testExperimentData fail");
+		    		}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+	    	    Log.d("EXPERIMENT", "data_read_thread");
+	    	    
+	    	    try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
   
   public void CreateNewSeries() {
       String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);

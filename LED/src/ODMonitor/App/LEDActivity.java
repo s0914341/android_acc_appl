@@ -1,4 +1,4 @@
-package FTDI.LED;
+package ODMonitor.App;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -17,7 +17,7 @@ import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
-import FTDI.LED.R.drawable;
+import ODMonitor.App.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -93,22 +93,18 @@ public class LEDActivity extends Activity{
     public byte[] script;
     private IDemoChart[] mCharts = new IDemoChart[] { new AverageTemperatureChart() };
     final Context context = this;
-    private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
-    private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
-    private XYSeriesRenderer mCurrentRenderer;
-    private XYSeries mCurrentSeries;
-    private GraphicalView mChartView;
     
     /*thread to listen USB data*/
     public handler_thread handlerThread;
-	
-	
+    public data_write_thread data_write_thread;
+    
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
     {     
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        Thread.currentThread().setName("Thread_LEDActivity");
         
         usbmanager = (UsbManager) getSystemService(Context.USB_SERVICE);
         Log.d("LED", "usbmanager" +usbmanager);
@@ -127,7 +123,9 @@ public class LEDActivity extends Activity{
 		debug_view = (TextView)findViewById(R.id.DebugView);
 		script = null;
 		led_connect_status = (ImageView)findViewById(R.id.ConnectStatus);
-	//	str = new String("testtest");
+		
+		data_write_thread = new data_write_thread(handler);
+		data_write_thread.start();
                
         button1 = (ImageButton) findViewById(R.id.Button1);
         button1.setOnClickListener(new View.OnClickListener()
@@ -349,68 +347,18 @@ public class LEDActivity extends Activity{
     }
     
     public void show_chart_dialog() {
-    /*    final Dialog dialog = new Dialog(context);
+    /*  final Dialog dialog = new Dialog(context);
  	    dialog.setContentView(R.layout.xy_layout);
  	    dialog.setTitle("Title...");
- 	*/   
- 	/*    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
+ 	   
+ 	    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
  		// if button is clicked, close the custom dialog
  	    dialogButton.setOnClickListener(new OnClickListener() {
  	        public void onClick(View v) {
  				dialog.dismiss();
  			}
- 		});*/
+ 		});
  	    
- 	   
-  /*   mRenderer.setApplyBackgroundColor(true);
- 	    mRenderer.setBackgroundColor(Color.argb(100, 50, 50, 50));
- 	    mRenderer.setAxisTitleTextSize(16);
- 	    mRenderer.setChartTitleTextSize(20);
- 	    mRenderer.setLabelsTextSize(15);
- 	    mRenderer.setLegendTextSize(15);
- 	    mRenderer.setMargins(new int[] { 20, 30, 15, 0 });
- 	    mRenderer.setZoomButtonsVisible(true);
- 	    mRenderer.setPointSize(5);
- 	    
- 	   String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);
-       // create a new series of data
-       XYSeries series = new XYSeries(seriesTitle);
-       mDataset.addSeries(series);
-       mCurrentSeries = series;
-       // create a new renderer for the new series
-       XYSeriesRenderer renderer = new XYSeriesRenderer();
-       mRenderer.addSeriesRenderer(renderer);
-       // set some renderer properties
-       renderer.setPointStyle(PointStyle.CIRCLE);
-       renderer.setFillPoints(true);
-       renderer.setDisplayChartValues(true);
-       renderer.setDisplayChartValuesDistance(10);
-       mCurrentRenderer = renderer;
- 	    
- 	   LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
- 	   mChartView = ChartFactory.getLineChartView(context, mDataset, mRenderer);
-       // enable the chart click events
-       mRenderer.setClickEnabled(true);
-       mRenderer.setSelectableBuffer(10);
-       mChartView.setOnClickListener(new View.OnClickListener() {
-           public void onClick(View v) {
-             // handle the click event on the chart
-             SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
-             if (seriesSelection == null) {
-               Toast.makeText(context, "No chart element", Toast.LENGTH_SHORT).show();
-             } else {
-               // display information of the clicked point
-               Toast.makeText(
-            		   context,
-                   "Chart element in series index " + seriesSelection.getSeriesIndex()
-                       + " data point index " + seriesSelection.getPointIndex() + " was clicked"
-                       + " closest point value X=" + seriesSelection.getXValue() + ", Y="
-                       + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();
-             }
-           }
-         });
-       layout.addView(mChartView, new LayoutParams(LayoutParams.FILL_PARENT,
-    	          LayoutParams.FILL_PARENT));
 
  		dialog.show();*/
     	Intent intent = null;
@@ -652,7 +600,7 @@ public class LEDActivity extends Activity{
 	
 	final Handler handler =  new Handler() {
     	@Override 
-    	public void handleMessage(Message msg) {
+    	public void handleMessage(Message msg) {	
     		Bundle b = msg.getData();
     		android_accessory_packet handle_receive_data = new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE);
     		byte[] recv = b.getByteArray(android_accessory_packet.key_receive);
@@ -756,6 +704,7 @@ public class LEDActivity extends Activity{
 		}
 		
 		public void run() {
+			Thread.currentThread().setName("Thread_AOA");
 			int readcount;
 		    android_accessory_packet[] receive_data = new android_accessory_packet[]{
 		    		new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE),
@@ -794,6 +743,55 @@ public class LEDActivity extends Activity{
 					    }
 					}
 				} catch (IOException e){}
+			}
+		}
+	}
+	
+	
+	private class data_write_thread  extends Thread {
+		Handler mHandler;
+		
+		data_write_thread(Handler h){
+			mHandler = h;
+		}
+		
+		public void run() {
+			byte[] experiment_data = new byte[3];
+			file_operation write_file = new file_operation("testExperimentData", "testExperimentData", true);
+    		try {
+    			write_file.delete_file(write_file.generate_filename());
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+			experiment_data[0] = 0;
+			experiment_data[1] = 0;
+			experiment_data[2] = 0;
+			
+			while(true) {
+	    	    try {
+	                write_file.create_write_file_byte_array(write_file.generate_filename());
+	    		    write_file.write_file_byte_array(experiment_data);
+	    		    write_file.flush_close_file_byte_array();
+			    } catch (IOException e) {
+				    // TODO Auto-generated catch block
+				    e.printStackTrace();
+			    }
+	    	    experiment_data[0]++;
+				experiment_data[1]++;
+				if (experiment_data[2] < 10)
+				    experiment_data[2]++;
+				else
+					experiment_data[2] = 0;
+	    	    
+	    	    Log.d("EXPERIMENT", "data_write_thread");
+	    	    
+	    	    try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package FTDI.LED;
+package ODMonitor.App;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;

@@ -1,4 +1,4 @@
-package FTDI.LED;
+package ODMonitor.App;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,7 +28,7 @@ public class file_operation {
 	public static String Flush_File = ""; 
 	private boolean file_append = false;
 	
-	file_operation(String dir_name, String file_name, boolean append) {
+	public file_operation(String dir_name, String file_name, boolean append) {
 	    file_Dir = file_Dir + dir_name;
 	    file_MetaData =  new File(file_Dir);
 	    CreateFileName = file_name;
