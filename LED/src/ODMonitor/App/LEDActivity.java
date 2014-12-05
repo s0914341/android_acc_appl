@@ -4,6 +4,7 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -174,7 +175,7 @@ public class LEDActivity extends Activity{
         				led2.setImageResource(drawable.image0);		
         		}
         		
-        		file_operation write_file = new file_operation("GetExperimentData", "ExperimentData", true);
+        		file_operate_byte_array write_file = new file_operate_byte_array("GetExperimentData", "ExperimentData", true);
         		try {
         			write_file.delete_file(write_file.generate_filename());
         		} catch (IOException e) {
@@ -205,13 +206,13 @@ public class LEDActivity extends Activity{
         				led3.setImageResource(drawable.image0);		
         		}
         		
-        		file_operation read_file = new file_operation("Script", "Script", true);
+        		file_operate_byte_array read_file = new file_operate_byte_array("Script", "Script", true);
 		    	try {
-		    		script_length = read_file.open_read_file_byte_array(read_file.generate_filename_no_date());
+		    		script_length = read_file.open_read_file(read_file.generate_filename_no_date());
 		    		
 		    		if (script_length > 0) {
 		    		    script = new byte[script_length];
-		    		    read_file.read_file_byte_array(script);
+		    		    read_file.read_file(script);
 		    		    byte[] data = new byte[1];
 		        		data[0] = ibutton;
 		        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, android_accessory_packet.STATUS_START, data, 0);	
@@ -560,7 +561,7 @@ public class LEDActivity extends Activity{
     	shaker_return.setText(str);
     	try {
     		write_file.create_file(write_file.generate_filename());
-    		write_file.write_file_msg(str);
+    		write_file.write_file(str);
     		write_file.flush_close_file();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -638,11 +639,11 @@ public class LEDActivity extends Activity{
         		    	//   		handle_receive_data.get_Type_value(), handle_receive_data.get_Status_value(), handle_receive_data.get_Len_value());
         		    	//debug_view.setText(debug_str);
         		    	//String experiment_str = new String(experiment_data);
-        		    	file_operation write_file = new file_operation("GetExperimentData", "ExperimentData", true);
+        		    	file_operate_byte_array write_file = new file_operate_byte_array("GetExperimentData", "ExperimentData", true);
         		    	try {
-        		            write_file.create_write_file_byte_array(write_file.generate_filename());
-        		    		write_file.write_file_byte_array(experiment_data);
-        		    		write_file.flush_close_file_byte_array();
+        		            write_file.create_file(write_file.generate_filename());
+        		    		write_file.write_file(experiment_data);
+        		    		write_file.flush_close_file();
         				} catch (IOException e) {
         					// TODO Auto-generated catch block
         					e.printStackTrace();
@@ -756,33 +757,44 @@ public class LEDActivity extends Activity{
 		}
 		
 		public void run() {
-			byte[] experiment_data = new byte[3];
-			file_operation write_file = new file_operation("testExperimentData", "testExperimentData", true);
+			long index = 5;
+			double concentration = 20;
+	
+			file_operate_chart write_file = new file_operate_chart("testExperimentData", "testExperimentData", true);
     		try {
-    			write_file.delete_file(write_file.generate_filename());
+    			write_file.delete_file(write_file.generate_filename_no_date());
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
     		}
-			experiment_data[0] = 0;
-			experiment_data[1] = 0;
-			experiment_data[2] = 0;
 			
 			while(true) {
-	    	    try {
-	                write_file.create_write_file_byte_array(write_file.generate_filename());
-	    		    write_file.write_file_byte_array(experiment_data);
-	    		    write_file.flush_close_file_byte_array();
+				try {
+					chart_display_data file_data = new chart_display_data(index, concentration);
+		           // ArrayList<Object> listChartData = new ArrayList<Object>();
+		           // listChartData.add(file_data);
+		            write_file.create_file(write_file.generate_filename_no_date());
+		          //  write_file.writeObject(listChartData);
+		            write_file.writeObject(file_data);
+		            write_file.flush_close_file();
+		        } catch (IOException ex) {
+		     
+		        }
+				
+				index++;
+				concentration = (double)(Math.random()*50);
+				
+	    	 /*   try {
+	                write_file.create_file(write_file.generate_filename_no_date());
+	    		    write_file.write_file(experiment_data);
+	    		    write_file.flush_close_file();
 			    } catch (IOException e) {
 				    // TODO Auto-generated catch block
 				    e.printStackTrace();
 			    }
 	    	    experiment_data[0]++;
 				experiment_data[1]++;
-				if (experiment_data[2] < 10)
-				    experiment_data[2]++;
-				else
-					experiment_data[2] = 0;
+				experiment_data[2] = (byte)(Math.random()*50);*/
 	    	    
 	    	    Log.d("EXPERIMENT", "data_write_thread");
 	    	    
