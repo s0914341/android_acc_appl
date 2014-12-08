@@ -33,7 +33,7 @@
             	android:layout_height="wrap_content" 
             	android:layout_alignParentLeft="true" 
             	android:text="Start"
-            	android:layout_marginLeft="35dp"
+            	android:layout_marginLeft="55dp"
             	android:layout_marginTop="110dp"
             	android:textStyle="bold">
             </TextView>
@@ -47,7 +47,7 @@
             	android:layout_alignTop="@+id/textViewButton1" 
             	android:layout_alignBottom="@+id/textViewButton1"
             	android:text="Get Data"
-            	android:layout_marginLeft="42dp"
+            	android:layout_marginLeft="52dp"
             	android:textStyle="bold">
             </TextView>
             
@@ -60,6 +60,19 @@
             	android:layout_alignTop="@+id/textViewButton2" 
             	android:layout_alignBottom="@+id/textViewButton2"
             	android:text="Set Script"
+            	android:layout_marginLeft="42dp"
+            	android:textStyle="bold">
+            </TextView>
+            
+        	<TextView 
+            	android:id="@+id/textViewButton4" 
+            	android:textAppearance="?android:attr/textAppearanceMedium"
+            	android:layout_width="wrap_content" 
+            	android:layout_height="wrap_content" 
+            	android:layout_toRightOf="@+id/textViewButton3" 
+            	android:layout_alignTop="@+id/textViewButton3" 
+            	android:layout_alignBottom="@+id/textViewButton3"
+            	android:text="Chart"
             	android:layout_marginLeft="42dp"
             	android:textStyle="bold">
             </TextView>
@@ -85,8 +98,9 @@
             </ImageButton>
             
             <ImageView 
-            	android:layout_width="wrap_content" 
+            	android:layout_width="450dp" 
             	android:layout_height="wrap_content" 
+            	android:background="#FFFFFFFF"
             	android:src="@drawable/line" 
             	android:layout_marginTop="110dp"
             	android:layout_marginLeft="20dp" 
@@ -102,7 +116,7 @@
             	android:layout_alignTop="@+id/LED1" 
             	android:layout_alignBottom="@+id/LED1"
             	android:layout_centerVertical="true"
-            	android:layout_marginLeft="42dp">
+            	android:layout_marginLeft="62dp">
             </ImageView>
             
             <ImageButton android:layout_width="65dp" 
@@ -125,7 +139,7 @@
             	android:layout_alignTop="@+id/LED2" 
             	android:layout_alignBottom="@+id/LED2"
             	android:layout_centerVertical="true"
-            	android:layout_marginLeft="42dp">
+            	android:layout_marginLeft="62dp">
             </ImageView>
             
            	<ImageButton 
@@ -149,7 +163,7 @@
             	android:layout_alignTop="@+id/LED3" 
             	android:layout_alignBottom="@+id/LED3"
             	android:layout_centerVertical="true"
-            	android:layout_marginLeft="42dp">
+            	android:layout_marginLeft="62dp">
             </ImageView>
             
            	<ImageButton 

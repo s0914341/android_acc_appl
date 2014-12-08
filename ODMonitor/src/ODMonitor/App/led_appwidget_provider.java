@@ -38,7 +38,7 @@ public class led_appwidget_provider extends AppWidgetProvider {
 		views.setImageViewResource(R.id.led_imagebutton, R.drawable.icon);
 		
 		// Create an Intent to launch ExampleActivity
-        Intent intent = new Intent(context, LEDActivity.class);
+        Intent intent = new Intent(context, ODMonitorActivity.class);
         //intent.setAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         intent.setAction(Intent.ACTION_MAIN);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);

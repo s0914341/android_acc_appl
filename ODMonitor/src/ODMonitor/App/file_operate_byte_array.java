@@ -8,6 +8,7 @@ import java.io.IOException;
 import android.util.Log;
 
 public class file_operate_byte_array extends file_operation {
+	private final String Tag = "file_operate_byte_array";
 	public static FileOutputStream fos;
 	public static FileInputStream fis;
 	

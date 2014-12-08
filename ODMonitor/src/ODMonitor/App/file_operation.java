@@ -13,7 +13,7 @@ import android.os.Environment;
 import android.util.Log;
 
 public class file_operation {
-	public final String Tag = "ODMonitor_Sensor";
+	private final String Tag = "file_operation";
 	public File sdcard = Environment.getExternalStorageDirectory();
 	private String file_Dir = sdcard.getPath() + "/"; 
 	private String CreateFileName = "Default";

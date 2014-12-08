@@ -53,8 +53,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LEDActivity extends Activity{
-	
+public class ODMonitorActivity extends Activity{
+	public final String Tag = "ODMonitorActivity";
 	private static final String ACTION_USB_PERMISSION =    "FTDI.LED.USB_PERMISSION";
 	public UsbManager usbmanager;
 	public UsbAccessory usbaccessory;
@@ -108,11 +108,11 @@ public class LEDActivity extends Activity{
         Thread.currentThread().setName("Thread_LEDActivity");
         
         usbmanager = (UsbManager) getSystemService(Context.USB_SERVICE);
-        Log.d("LED", "usbmanager" +usbmanager);
+        Log.d(Tag, "usbmanager" +usbmanager);
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-        Log.d("LED", "filter" +filter);
+        Log.d(Tag, "filter" +filter);
         registerReceiver(mUsbReceiver, filter);
         
         led1 = (ImageView) findViewById(R.id.LED1);
@@ -216,13 +216,13 @@ public class LEDActivity extends Activity{
 		    		    byte[] data = new byte[1];
 		        		data[0] = ibutton;
 		        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, android_accessory_packet.STATUS_START, data, 0);	
-		        		Toast.makeText(LEDActivity.this, "Set experiment script start", Toast.LENGTH_SHORT).show(); 
+		        		Toast.makeText(ODMonitorActivity.this, "Set experiment script start", Toast.LENGTH_SHORT).show(); 
 		    		} else {
-		    			Toast.makeText(LEDActivity.this, "Get script lenght < 0", Toast.LENGTH_SHORT).show(); 
+		    			Toast.makeText(ODMonitorActivity.this, "Get script lenght < 0", Toast.LENGTH_SHORT).show(); 
 		    			Log.d("LED", "open script fail");
 		    		}
 				} catch (IOException e) {
-					Toast.makeText(LEDActivity.this, "read_file constructor fail", Toast.LENGTH_SHORT).show(); 
+					Toast.makeText(ODMonitorActivity.this, "read_file constructor fail", Toast.LENGTH_SHORT).show(); 
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -258,7 +258,7 @@ public class LEDActivity extends Activity{
         public boolean onKey(View v, int keyCode, KeyEvent event) { 
             if(event.getAction() == KeyEvent.ACTION_DOWN && 
                keyCode == KeyEvent.KEYCODE_ENTER){ 
-               Toast.makeText(LEDActivity.this, etInput.getText(), Toast.LENGTH_SHORT).show(); 
+               Toast.makeText(ODMonitorActivity.this, etInput.getText(), Toast.LENGTH_SHORT).show(); 
                String cmd = etInput.getText().toString();  
                byte[] usb_cmd = cmd.getBytes();
                WriteUsbCommand(android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND, android_accessory_packet.STATUS_OK, usb_cmd, cmd.length());
@@ -381,7 +381,7 @@ public class LEDActivity extends Activity{
   
 
    public void ConfirmExit(){
-        AlertDialog.Builder ad=new AlertDialog.Builder(LEDActivity.this); //創建訊息方塊
+        AlertDialog.Builder ad=new AlertDialog.Builder(ODMonitorActivity.this); //創建訊息方塊
         ad.setTitle("EXIT");
         ad.setMessage("Are you sure want to exit?");
         ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() { //按"是",則退出應用程式
@@ -438,12 +438,13 @@ public class LEDActivity extends Activity{
     @Override
     public void onResume() {
     		super.onResume();
+    		Log.d(Tag, "on Resume");
     		reconnect_to_accessory();
     }
     
     @Override
     public void onPause() {
-    	Log.d("LED", "on Pause");
+    	Log.d(Tag, "on Pause");
     	super.onPause();
     }
     
@@ -451,6 +452,7 @@ public class LEDActivity extends Activity{
 	public void onDestroy() {
 		//unregisterReceiver(mUsbReceiver);
 		//CloseAccessory();
+		Log.d(Tag, "on Destory");
 		super.onDestroy();
 	}
 	
@@ -651,7 +653,7 @@ public class LEDActivity extends Activity{
         		    	
         		    	if (android_accessory_packet.STATUS_OK == handle_receive_data.get_Status_value()) {
         		    		get_experiment_data_start = 0;
-        		    		Toast.makeText(LEDActivity.this, "Get experiment data complete", Toast.LENGTH_SHORT).show(); 
+        		    		Toast.makeText(ODMonitorActivity.this, "Get experiment data complete", Toast.LENGTH_SHORT).show(); 
         		    	}
     		    	
     		    	}		    	
@@ -679,7 +681,7 @@ public class LEDActivity extends Activity{
     		    		script_offset = 0;
     		    		script_length = 0;
     		    		script = null;
-    		    		Toast.makeText(LEDActivity.this, "Set experiment script end", Toast.LENGTH_SHORT).show(); 
+    		    		Toast.makeText(ODMonitorActivity.this, "Set experiment script end", Toast.LENGTH_SHORT).show(); 
     		    	}
             	break;
     			
@@ -757,10 +759,10 @@ public class LEDActivity extends Activity{
 		}
 		
 		public void run() {
-			long index = 5;
-			double concentration = 20;
+			long index = 0;
+			double concentration = 0;
 	
-			file_operate_chart write_file = new file_operate_chart("testExperimentData", "testExperimentData", true);
+			file_operate_byte_array write_file = new file_operate_byte_array("testExperimentData", "testExperimentData", true);
     		try {
     			write_file.delete_file(write_file.generate_filename_no_date());
     		} catch (IOException e) {
@@ -770,12 +772,12 @@ public class LEDActivity extends Activity{
 			
 			while(true) {
 				try {
-					chart_display_data file_data = new chart_display_data(index, concentration);
+					chart_display_data chart_data = new chart_display_data(index, concentration);
 		           // ArrayList<Object> listChartData = new ArrayList<Object>();
 		           // listChartData.add(file_data);
 		            write_file.create_file(write_file.generate_filename_no_date());
 		          //  write_file.writeObject(listChartData);
-		            write_file.writeObject(file_data);
+		            write_file.write_file(chart_data.get_object_buffer());
 		            write_file.flush_close_file();
 		        } catch (IOException ex) {
 		     
@@ -796,7 +798,7 @@ public class LEDActivity extends Activity{
 				experiment_data[1]++;
 				experiment_data[2] = (byte)(Math.random()*50);*/
 	    	    
-	    	    Log.d("EXPERIMENT", "data_write_thread");
+	    	    Log.d(Tag, "data_write_thread");
 	    	    
 	    	    try {
 					Thread.sleep(1000);
@@ -871,7 +873,7 @@ public class LEDActivity extends Activity{
 				}
 			}else
 			{
-				Log.d("LED", "....");
+				Log.d(Tag, "....");
 			}
 		}	
 	};
