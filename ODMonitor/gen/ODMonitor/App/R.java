@@ -64,22 +64,32 @@ public final class R {
         public static final int ViewShaker=0x7f070014;
         public static final int button_add=0x7f070022;
         public static final int button_save=0x7f070021;
-        public static final int chart=0x7f07002d;
+        public static final int chart=0x7f070037;
+        public static final int editText1=0x7f070030;
+        public static final int editText2=0x7f070032;
+        public static final int editText3=0x7f070034;
+        public static final int editText4=0x7f070036;
         public static final int etInput=0x7f07001d;
         public static final int frameLayout2=0x7f070011;
         public static final int frameLayoutShaker=0x7f07001b;
         public static final int imageView1=0x7f070025;
-        public static final int item1=0x7f07002e;
-        public static final int item2=0x7f07002f;
+        public static final int item1=0x7f070038;
+        public static final int item2=0x7f070039;
         public static final int led_imagebutton=0x7f070000;
         public static final int line=0x7f070009;
         public static final int linearLayout1=0x7f070024;
         public static final int linearLayout2=0x7f070028;
         public static final int listView1=0x7f070023;
+        public static final int planets_spinner=0x7f07002d;
         public static final int relativeLayout1=0x7f070001;
         public static final int shaker=0x7f07001c;
+        public static final int spinner1=0x7f07002e;
         public static final int textView1=0x7f070002;
         public static final int textView2=0x7f070020;
+        public static final int textView3=0x7f07002f;
+        public static final int textView4=0x7f070031;
+        public static final int textView5=0x7f070033;
+        public static final int textView6=0x7f070035;
         public static final int textViewButton1=0x7f070003;
         public static final int textViewButton2=0x7f070004;
         public static final int textViewButton3=0x7f070005;
@@ -96,7 +106,8 @@ public final class R {
         public static final int main=0x7f030001;
         public static final int script_layout=0x7f030002;
         public static final int script_list=0x7f030003;
-        public static final int xy_layout=0x7f030004;
+        public static final int script_setting=0x7f030004;
+        public static final int xy_layout=0x7f030005;
     }
     public static final class menu {
         public static final int setting_menu=0x7f060000;

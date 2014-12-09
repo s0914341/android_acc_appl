@@ -7,14 +7,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.achartengine.chartdemo.demo.chart.IDemoChart;
+import org.achartengine.chartdemo.demo.chart.XYChartBuilder;
 
 import ODMonitor.App.R.drawable;
 import ODMonitor.App.data.experiment_script_data;
 import android.app.Activity;
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -35,6 +39,15 @@ public class script_activity_list extends Activity {
 	private SimpleAdapter adapter;
 	ListView list_view;
 	Button button_add_item;
+	
+	private static final int[] mPics=new int[]{
+        R.drawable.image50,R.drawable.image35,R.drawable.image20, R.drawable.image100,R.drawable.image50,
+        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
+        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
+        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
+        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
+        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50
+    };
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -76,7 +89,14 @@ public class script_activity_list extends Activity {
 	    //啟用按鍵過濾功能，這兩行都會進行過濾
 	    list_view.setTextFilterEnabled(true);
 	   // getListView().setTextFilterEnabled(true);
-	    
+	    list_view.setOnItemClickListener(new OnItemClickListener() {
+	    	 
+	        public void onItemClick(AdapterView<?> arg0, View view,
+	                int position, long id) {
+	            Log.d(Tag, "ListViewItem = " + id);
+	            show_script_setting_dialog();
+	        }
+	    });
 	    
 	    button_add_item = (Button) findViewById(R.id.button_add);
 	    button_add_item.setOnClickListener(new View.OnClickListener() {
@@ -100,15 +120,6 @@ public class script_activity_list extends Activity {
         	}
 		});
     }
-	    private static final int[] mPics=new int[]{
-	        R.drawable.image50,R.drawable.image35,R.drawable.image20, R.drawable.image100,R.drawable.image50,
-	        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-	        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-	        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-	        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-	        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50
-	    };
-	
 	
 	private List<Map<String, String>> getListValues() {
 	    List<Map<String, String>> values = new ArrayList<Map<String, String>>();
@@ -121,5 +132,26 @@ public class script_activity_list extends Activity {
 	    }
 	    return values;
 	}
+	
+	public void show_script_setting_dialog() {
+	    /*  final Dialog dialog = new Dialog(context);
+	 	    dialog.setContentView(R.layout.xy_layout);
+	 	    dialog.setTitle("Title...");
+	 	   
+	 	    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
+	 		// if button is clicked, close the custom dialog
+	 	    dialogButton.setOnClickListener(new OnClickListener() {
+	 	        public void onClick(View v) {
+	 				dialog.dismiss();
+	 			}
+	 		});
+	 	    
+
+	 		dialog.show();*/
+	    	Intent intent = null;
+	    	//intent = mCharts[0].execute(this);
+	    	intent = new Intent(this, script_setting_activity.class);
+	    	startActivity(intent);
+    }
 
 }
