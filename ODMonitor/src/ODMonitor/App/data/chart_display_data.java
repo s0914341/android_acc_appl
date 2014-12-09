@@ -1,13 +1,19 @@
-package ODMonitor.App;
+package ODMonitor.App.data;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
 public class chart_display_data implements Serializable{
-	private long index;
-	private long date;
-	private double concentration;
+	/**
+	 * we need define a serial version UID value myself, 
+	 * avoid different JVM version which general different UID value,
+	 * the reason will possible cause deserialize fail. 
+	 */
+	private static final long serialVersionUID = 6216079271089948708L;
+	protected long index;
+	protected long date;
+	protected double concentration;
 	
 	private static final int index_length = Long.SIZE/8;
 	private static final int date_length = Long.SIZE/8;
@@ -37,7 +43,7 @@ public class chart_display_data implements Serializable{
 		return concentration;
 	}
 	
-	public int get_total_length() {
+	public static int get_total_length() {
 		return total_length;
 	}
 	

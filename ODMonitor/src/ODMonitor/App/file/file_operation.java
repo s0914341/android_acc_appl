@@ -1,4 +1,4 @@
-package ODMonitor.App;
+package ODMonitor.App.file;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,18 +13,18 @@ import android.os.Environment;
 import android.util.Log;
 
 public class file_operation {
-	private final String Tag = "file_operation";
+	private String Tag = "file_operation";
 	public File sdcard = Environment.getExternalStorageDirectory();
 	private String file_Dir = sdcard.getPath() + "/"; 
 	private String CreateFileName = "Default";
-	public File file_MetaData;
-	public File file;
-	private static BufferedWriter file_buf;
+	protected File file_MetaData;
+	protected File file;
+	private BufferedWriter file_buf;
 	//SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
-	public SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
-	public static SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-	public static String Flush_File = ""; 
-	public boolean file_append = false;
+	protected SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
+	protected static SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	protected static String Flush_File = ""; 
+	protected boolean file_append = false;
 	
 	public file_operation(String dir_name, String file_name, boolean append) {
 	    file_Dir = file_Dir + dir_name;

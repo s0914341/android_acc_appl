@@ -32,6 +32,9 @@
                   android:theme="@android:style/Theme.NoTitleBar"
                   android:launchMode="singleTask" />
         <activity android:name="org.achartengine.GraphicalActivity" />
+        <activity android:name=".script_activity_list"
+                  android:theme="@android:style/Theme.NoTitleBar"
+                  android:launchMode="singleTask" />
         <!-- <activity
 	         android:name="org.achartengine.chartdemo.demo.chart.XYChartBuilder"
 	         android:theme="@android:style/Theme.Dialog" >

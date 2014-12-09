@@ -1,4 +1,4 @@
-package ODMonitor.App;
+package ODMonitor.App.file;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,9 +8,9 @@ import java.io.IOException;
 import android.util.Log;
 
 public class file_operate_byte_array extends file_operation {
-	private final String Tag = "file_operate_byte_array";
-	public static FileOutputStream fos;
-	public static FileInputStream fis;
+	private String Tag = "file_operate_byte_array";
+	protected FileOutputStream fos;
+	protected FileInputStream fis;
 	
 	public file_operate_byte_array(String dir_name, String file_name,
 			boolean append) {

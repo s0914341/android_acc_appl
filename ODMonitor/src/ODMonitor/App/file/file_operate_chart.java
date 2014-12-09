@@ -1,4 +1,4 @@
-package ODMonitor.App;
+package ODMonitor.App.file;
 
 import java.io.BufferedWriter;
 import java.io.EOFException;
@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
+import ODMonitor.App.data.chart_display_data;
 import android.util.Log;
 
 public class file_operate_chart extends file_operate_byte_array {

@@ -178,6 +178,18 @@
             		android:layout_alignLeft="@+id/LED4">
             </ImageButton> 
             
+           	<ImageButton 
+            		android:background="@drawable/buttons" 
+            		android:layout_width="65dp" 
+            		android:id="@+id/Button5" 
+            		android:layout_height="65dp"
+            		android:adjustViewBounds="false" 
+            		android:layout_toRightOf="@+id/Button4"            		
+            		android:layout_alignTop="@+id/Button4"
+            		android:scaleType="fitCenter"
+            		android:layout_marginLeft="62dp">
+            </ImageButton> 
+            
         </RelativeLayout>          
    <!--      <RelativeLayout  
         	android:layout_height="150dp" 

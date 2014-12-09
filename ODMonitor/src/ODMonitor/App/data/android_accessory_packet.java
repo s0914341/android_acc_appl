@@ -1,4 +1,4 @@
-package ODMonitor.App;
+package ODMonitor.App.data;
 
 public class android_accessory_packet {
 	public static final byte DATA_TYPE_KEYPAD = 0;
@@ -96,15 +96,15 @@ public class android_accessory_packet {
 	    return (int)buffer[LEN]&0xff;
 	}
 	
-	public int get_size() {
+	public static int get_size() {
 	    return TOTAL_SIZE;
 	}
 	
-	public int get_header_size() {
+	public static int get_header_size() {
 	    return HEADER_SIZE;
 	}
 	
-	public int get_data_size() {
+	public static int get_data_size() {
 	    return DATA_SIZE;
 	}
 	

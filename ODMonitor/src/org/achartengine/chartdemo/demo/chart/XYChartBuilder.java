@@ -32,11 +32,11 @@ import org.achartengine.renderer.XYSeriesRenderer;
 
 import ODMonitor.App.ODMonitorActivity;
 import ODMonitor.App.R;
-import ODMonitor.App.android_accessory_packet;
-import ODMonitor.App.chart_display_data;
-import ODMonitor.App.file_operate_byte_array;
-import ODMonitor.App.file_operate_chart;
-import ODMonitor.App.file_operation;
+import ODMonitor.App.data.android_accessory_packet;
+import ODMonitor.App.data.chart_display_data;
+import ODMonitor.App.file.file_operate_byte_array;
+import ODMonitor.App.file.file_operate_chart;
+import ODMonitor.App.file.file_operation;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -51,7 +51,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class XYChartBuilder extends Activity {
-  public final String Tag = "XYChartBuilder";
+  public String Tag = "XYChartBuilder";
   /** The main dataset that includes all the series that go into a chart. */
   private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
   /** The main renderer that includes all the renderers customizing a chart. */
@@ -179,11 +179,11 @@ public class XYChartBuilder extends Activity {
 						byte[] read_buf = new byte[file_len];
 						read_file.read_file(read_buf);
 					    chart_display_data chart_data = new chart_display_data();
-					    byte[] chart_temp = new byte[chart_data.get_total_length()];
+					    byte[] chart_temp = new byte[chart_display_data.get_total_length()];
 					    int offset = 0;
 					    
 					    for (offset = 0; offset < file_len; offset += chart_temp.length) {
-					    	if ((offset + chart_data.get_total_length()) <= file_len) {
+					    	if ((offset + chart_display_data.get_total_length()) <= file_len) {
 					    	    System.arraycopy(read_buf, offset, chart_temp, 0, chart_temp.length);
 					    	    if (0 == chart_data.set_object_buffer(chart_temp)) {
 					    	        if (chart_data.get_index_value() > current_index) {

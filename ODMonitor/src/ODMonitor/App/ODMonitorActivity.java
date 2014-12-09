@@ -19,6 +19,10 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
 import ODMonitor.App.R.drawable;
+import ODMonitor.App.data.android_accessory_packet;
+import ODMonitor.App.data.chart_display_data;
+import ODMonitor.App.file.file_operate_byte_array;
+import ODMonitor.App.file.file_operation;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -54,8 +58,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ODMonitorActivity extends Activity{
-	public final String Tag = "ODMonitorActivity";
-	private static final String ACTION_USB_PERMISSION =    "FTDI.LED.USB_PERMISSION";
+	public String Tag = "ODMonitorActivity";
+	private static final String ACTION_USB_PERMISSION = "FTDI.LED.USB_PERMISSION";
 	public UsbManager usbmanager;
 	public UsbAccessory usbaccessory;
 	public PendingIntent mPermissionIntent;
@@ -76,6 +80,7 @@ public class ODMonitorActivity extends Activity{
     public ImageButton button2; //Button led2;
     public ImageButton button3; //Button led3;
     public ImageButton button4; //Button led4;
+    public ImageButton button5; //Button led4;
     
     public ImageView led1;
     public ImageView led2;
@@ -91,7 +96,7 @@ public class ODMonitorActivity extends Activity{
     public int get_experiment_data_start = 0;
     public int script_length = 0;
     public int script_offset = 0;
-    public byte[] script;
+    public byte[] script = null;
     private IDemoChart[] mCharts = new IDemoChart[] { new AverageTemperatureChart() };
     final Context context = this;
     
@@ -122,7 +127,6 @@ public class ODMonitorActivity extends Activity{
 		
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
-		script = null;
 		led_connect_status = (ImageView)findViewById(R.id.ConnectStatus);
 		
 		data_write_thread = new data_write_thread(handler);
@@ -219,7 +223,7 @@ public class ODMonitorActivity extends Activity{
 		        		Toast.makeText(ODMonitorActivity.this, "Set experiment script start", Toast.LENGTH_SHORT).show(); 
 		    		} else {
 		    			Toast.makeText(ODMonitorActivity.this, "Get script lenght < 0", Toast.LENGTH_SHORT).show(); 
-		    			Log.d("LED", "open script fail");
+		    			Log.d(Tag, "open script fail");
 		    		}
 				} catch (IOException e) {
 					Toast.makeText(ODMonitorActivity.this, "read_file constructor fail", Toast.LENGTH_SHORT).show(); 
@@ -249,7 +253,14 @@ public class ODMonitorActivity extends Activity{
         		//data[0] = ibutton;
         		//WriteUsbCommand(android_accessory_packet.DATA_TYPE_KEYPAD, android_accessory_packet.STATUS_OK, data, 1);
         		//reconnect_to_accessory();
-        		show_chart_dialog();
+        		show_chart_activity();
+			}
+		});  
+        
+        button5 = (ImageButton) findViewById(R.id.Button5);
+        button5.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+        		show_script_activity();
 			}
 		});  
         
@@ -347,7 +358,7 @@ public class ODMonitorActivity extends Activity{
         */
     }
     
-    public void show_chart_dialog() {
+    public void show_chart_activity() {
     /*  final Dialog dialog = new Dialog(context);
  	    dialog.setContentView(R.layout.xy_layout);
  	    dialog.setTitle("Title...");
@@ -369,18 +380,24 @@ public class ODMonitorActivity extends Activity{
     	startActivity(intent);
     }
     
+    public void show_script_activity() {
+        	Intent intent = null;
+        	intent = new Intent(this, script_activity_list.class);
+        	startActivity(intent);
+    }
+    
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {   //確定按下退出鍵
             ConfirmExit();
             return true;  
-     }  
+        }  
         
-     return super.onKeyDown(keyCode, event);  
-   }
+        return super.onKeyDown(keyCode, event);  
+    }
 
   
 
-   public void ConfirmExit(){
+    public void ConfirmExit(){
         AlertDialog.Builder ad=new AlertDialog.Builder(ODMonitorActivity.this); //創建訊息方塊
         ad.setTitle("EXIT");
         ad.setMessage("Are you sure want to exit?");
@@ -394,12 +411,11 @@ public class ODMonitorActivity extends Activity{
         ad.setNegativeButton("No",new DialogInterface.OnClickListener() { //按"否",則不執行任何操作
             public void onClick(DialogInterface dialog, int i) {
 
-           }
-
+            }
         });
 
         ad.show();//顯示訊息視窗
-  }
+    }
     
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -773,10 +789,7 @@ public class ODMonitorActivity extends Activity{
 			while(true) {
 				try {
 					chart_display_data chart_data = new chart_display_data(index, concentration);
-		           // ArrayList<Object> listChartData = new ArrayList<Object>();
-		           // listChartData.add(file_data);
 		            write_file.create_file(write_file.generate_filename_no_date());
-		          //  write_file.writeObject(listChartData);
 		            write_file.write_file(chart_data.get_object_buffer());
 		            write_file.flush_close_file();
 		        } catch (IOException ex) {
@@ -785,19 +798,6 @@ public class ODMonitorActivity extends Activity{
 				
 				index++;
 				concentration = (double)(Math.random()*50);
-				
-	    	 /*   try {
-	                write_file.create_file(write_file.generate_filename_no_date());
-	    		    write_file.write_file(experiment_data);
-	    		    write_file.flush_close_file();
-			    } catch (IOException e) {
-				    // TODO Auto-generated catch block
-				    e.printStackTrace();
-			    }
-	    	    experiment_data[0]++;
-				experiment_data[1]++;
-				experiment_data[2] = (byte)(Math.random()*50);*/
-	    	    
 	    	    Log.d(Tag, "data_write_thread");
 	    	    
 	    	    try {
@@ -841,38 +841,28 @@ public class ODMonitorActivity extends Activity{
 		catch (IOException e) {}		
 	}
    
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() 
-	{
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
 		@Override
-		public void onReceive(Context context, Intent intent) 
-		{
+		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
-			if (ACTION_USB_PERMISSION.equals(action)) 
-			{
-				synchronized (this)
-				{
+			if (ACTION_USB_PERMISSION.equals(action)) {
+				synchronized (this) {
 					UsbAccessory accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false))
-					{
+					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 						OpenAccessory(accessory);
-					} 
-					else 
-					{
-						Log.d("LED", "permission denied for accessory "+ accessory);
+					} else {
+						Log.d(Tag, "permission denied for accessory "+ accessory);
 						
 					}
 					mPermissionRequestPending = false;
 				}
-			} 
-			else if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) 
-			{
+			} else if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) {
 				UsbAccessory accessory = (UsbAccessory)intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
 				if (accessory != null )//&& accessory.equals(usbaccessory))
 				{
 					CloseAccessory();
 				}
-			}else
-			{
+			} else {
 				Log.d(Tag, "....");
 			}
 		}	
