@@ -110,7 +110,7 @@ public class ODMonitorActivity extends Activity{
     {     
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        Thread.currentThread().setName("Thread_LEDActivity");
+        Thread.currentThread().setName("Thread_ODMonitorActivity");
         
         usbmanager = (UsbManager) getSystemService(Context.USB_SERVICE);
         Log.d(Tag, "usbmanager" +usbmanager);

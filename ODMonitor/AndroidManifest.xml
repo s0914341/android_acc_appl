@@ -39,7 +39,8 @@
                   android:launchMode="singleTask" />
         
         <activity android:name=".script_setting_activity"
-                  android:theme="@android:style/Theme.Dialog" />
+                  android:label="Script Setting"
+                  android:theme="@style/ScriptSettingTheme"/>
         <!-- <activity
 	         android:name="org.achartengine.chartdemo.demo.chart.XYChartBuilder"
 	         android:theme="@android:style/Theme.Dialog" >
