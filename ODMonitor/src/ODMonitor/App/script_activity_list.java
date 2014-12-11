@@ -41,13 +41,16 @@ public class script_activity_list extends Activity {
 	private final static String key_repeat_count = "repeat_count"; 
 	private final static String key_repeat_time = "repeat_time";
 	private final static String key_shaker_argument = "shaker_argument";
+	
+	private final static int PICK_CONTACT_REQUEST = 0;
     private String[] mMenuText;
 	private String[] mMenuSummary;
-	ArrayList<HashMap<String,Object>> list = new ArrayList<HashMap<String,Object>>();
-	public HashMap<Object, Object> item = new HashMap<Object, Object>();
+	List<HashMap<String,Object>> list = new ArrayList<HashMap<String,Object>>();
+	public HashMap<Object, Object> experiment_item = new HashMap<Object, Object>();
 	public SimpleAdapter adapter;
 	public ListView list_view;
 	Button button_add_item;
+	Button button_clear_all;
 	
 	private static final int[] mPics=new int[]{
         R.drawable.image50,R.drawable.image35,R.drawable.image20, R.drawable.image100,R.drawable.image50,
@@ -81,7 +84,7 @@ public class script_activity_list extends Activity {
 	        item_string_view.put(key_shaker_argument, "shaker command¡G"+"set speed");
 	        list.add(item_string_view);
 	        
-	        item.put(item_string_view, item_data);
+	        experiment_item.put(item_string_view, item_data);
 	    }
 	    
 	  //·s¼WSimpleAdapter
@@ -126,10 +129,23 @@ public class script_activity_list extends Activity {
                     item_string_view.put(key_repeat_time, "time¡G"+item_data.get_repeat_time_string()+"min");
                     item_string_view.put(key_shaker_argument, "shaker command¡G"+"set speed");
             	    list.add(item_string_view);
-            	    item.put(item_string_view, item_data);
+            	    experiment_item.put(item_string_view, item_data);
                     adapter.notifyDataSetChanged();
                 } catch (NullPointerException e) {
                     Log.i(Tag, "Tried to add null value");
+                }
+        	}
+		});
+	    
+	    button_clear_all = (Button) findViewById(R.id.button_clear_all);
+	    button_clear_all.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {
+        		try {
+        			list.clear();
+        			experiment_item.clear();
+        		    adapter.notifyDataSetChanged();
+                } catch (NullPointerException e) {
+                    Log.i(Tag, "Tried to clear all exception");
                 }
         	}
 		});
@@ -156,6 +172,7 @@ public class script_activity_list extends Activity {
 	    Log.d(Tag, "onContextItemSelected = " + info.id);
 	    
 	    list.remove((int)info.id);
+	    experiment_item.remove(list.get((int)info.id));
         adapter.notifyDataSetChanged();
 	   // String listItemName = Countries[info.position];
 
@@ -177,12 +194,46 @@ public class script_activity_list extends Activity {
 	}
 	
 	public void show_script_setting_dialog(long id) {
-	    	Intent intent = null;
-	    	intent = new Intent(this, script_setting_activity.class);
+		    //In the method that is called when click on "update"
+	    	Intent intent = new Intent(this, script_setting_activity.class);
 	    	intent.setClass(script_activity_list.this, script_setting_activity.class); 
-	    	intent.putExtra("experiment_script_data", (experiment_script_data)item.get(list.get((int)id))); 
-	    	startActivity(intent);
+	    	intent.putExtra("send_experiment_script_data", (experiment_script_data)experiment_item.get(list.get((int)id))); 
+	    	intent.putExtra("send_total_item", list.size()); 
+	    	intent.putExtra("send_item_id", id); 
+	    	
+	    	//startActivity(intent);
+	    	
+	    	startActivityForResult(intent, PICK_CONTACT_REQUEST); //I always put 0 for someIntValue
     }
+	
+	//In your class
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    super.onActivityResult(requestCode, resultCode, data);
+	    //Retrieve data in the intent
+	/*    long id = intent.getLongExtra("return_item_id", -1);
+	    if (id >= 0) {
+	    	experiment_script_data item_data = (experiment_script_data)intent.getSerializableExtra("return_experiment_script_data");
+	        experiment_item.remove(list.get((int)id));
+	        experiment_item.put(list.get((int)id), item_data);
+	    }
+	    
+	    Log.d(Tag, "onActivityResult = " + id);*/
+		
+		if (requestCode == PICK_CONTACT_REQUEST) {
+	        // Make sure the request was successful
+	        if (resultCode == RESULT_OK) {
+	        	long id = data.getLongExtra("return_item_id", -1);
+	     	    if (id >= 0) {
+	     	    	experiment_script_data item_data = (experiment_script_data)data.getSerializableExtra("return_experiment_script_data");
+	     	        experiment_item.remove(list.get((int)id));
+	     	        experiment_item.put(list.get((int)id), item_data);
+	     	    }
+	     	    
+	     	    Log.d(Tag, "onActivityResult = " + id);
+	        }
+	    }
+	}
 	
 	@Override
     public void onResume() {

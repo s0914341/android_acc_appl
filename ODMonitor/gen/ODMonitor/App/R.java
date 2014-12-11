@@ -10,6 +10,11 @@ package ODMonitor.App;
 public final class R {
     public static final class array {
         public static final int list_menu=0x7f050000;
+        public static final int read_sensor_enable=0x7f050001;
+        public static final int shaker_off_enable=0x7f050003;
+        public static final int shaker_on_enable=0x7f050002;
+        public static final int shaker_set_speed_enable=0x7f050005;
+        public static final int shaker_set_temperature_enable=0x7f050004;
     }
     public static final class attr {
     }
@@ -69,45 +74,48 @@ public final class R {
         public static final int ViewMassStorage=0x7f0a0013;
         public static final int ViewSensor=0x7f0a0015;
         public static final int ViewShaker=0x7f0a0014;
-        public static final int button_add=0x7f0a0022;
-        public static final int button_ok=0x7f0a0037;
-        public static final int button_save=0x7f0a0021;
-        public static final int chart=0x7f0a0038;
-        public static final int editText1=0x7f0a0030;
-        public static final int editText2=0x7f0a0032;
-        public static final int editText3=0x7f0a0034;
-        public static final int editText4=0x7f0a0036;
+        public static final int button_add=0x7f0a0023;
+        public static final int button_clear_all=0x7f0a0024;
+        public static final int button_ok=0x7f0a003a;
+        public static final int button_save=0x7f0a0025;
+        public static final int chart=0x7f0a003b;
+        public static final int editText_repeat_count=0x7f0a0033;
+        public static final int editText_repeat_time=0x7f0a0035;
+        public static final int editText_shaker_speed=0x7f0a0039;
+        public static final int editText_shaker_temperature=0x7f0a0037;
         public static final int etInput=0x7f0a001d;
         public static final int frameLayout2=0x7f0a0011;
         public static final int frameLayoutShaker=0x7f0a001b;
-        public static final int imageView1=0x7f0a0025;
-        public static final int item1=0x7f0a0039;
-        public static final int item2=0x7f0a003a;
+        public static final int frameLayoutShaker2=0x7f0a0020;
+        public static final int imageView1=0x7f0a0028;
+        public static final int item1=0x7f0a003c;
+        public static final int item2=0x7f0a003d;
         public static final int led_imagebutton=0x7f0a0000;
         public static final int line=0x7f0a0009;
-        public static final int linearLayout1=0x7f0a0024;
-        public static final int linearLayout2=0x7f0a0028;
-        public static final int listView1=0x7f0a0023;
+        public static final int linearLayout1=0x7f0a0027;
+        public static final int linearLayout2=0x7f0a002b;
+        public static final int listView1=0x7f0a0026;
         public static final int relativeLayout1=0x7f0a0001;
         public static final int shaker=0x7f0a001c;
-        public static final int spinner_instruct=0x7f0a002d;
-        public static final int spinner_repeat_from=0x7f0a002e;
+        public static final int spinner_instruct=0x7f0a0030;
+        public static final int spinner_repeat_from=0x7f0a0031;
+        public static final int test=0x7f0a0021;
         public static final int textView1=0x7f0a0002;
-        public static final int textView2=0x7f0a0020;
-        public static final int textView3=0x7f0a002f;
-        public static final int textView4=0x7f0a0031;
-        public static final int textView5=0x7f0a0033;
-        public static final int textView6=0x7f0a0035;
+        public static final int textView2=0x7f0a0022;
+        public static final int textView3=0x7f0a0032;
+        public static final int textView4=0x7f0a0034;
+        public static final int textView5=0x7f0a0036;
+        public static final int textView6=0x7f0a0038;
         public static final int textViewButton1=0x7f0a0003;
         public static final int textViewButton2=0x7f0a0004;
         public static final int textViewButton3=0x7f0a0005;
         public static final int textViewButton4=0x7f0a0006;
-        public static final int textViewCount=0x7f0a002a;
-        public static final int textViewFrom=0x7f0a0029;
-        public static final int textViewIndex=0x7f0a0026;
-        public static final int textViewInstruction=0x7f0a0027;
-        public static final int textViewShakerArgument=0x7f0a002c;
-        public static final int textViewTime=0x7f0a002b;
+        public static final int textViewCount=0x7f0a002d;
+        public static final int textViewFrom=0x7f0a002c;
+        public static final int textViewIndex=0x7f0a0029;
+        public static final int textViewInstruction=0x7f0a002a;
+        public static final int textViewShakerArgument=0x7f0a002f;
+        public static final int textViewTime=0x7f0a002e;
     }
     public static final class layout {
         public static final int led_appwidget_layout=0x7f030000;
@@ -123,6 +131,7 @@ public final class R {
     public static final class string {
         public static final int app_name=0x7f070001;
         public static final int hello=0x7f070000;
+        public static final int link=0x7f070003;
         public static final int submit=0x7f070002;
     }
     public static final class style {

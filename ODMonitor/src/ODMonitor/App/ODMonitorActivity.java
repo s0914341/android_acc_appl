@@ -39,6 +39,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -104,6 +106,8 @@ public class ODMonitorActivity extends Activity{
     public handler_thread handlerThread;
     public data_write_thread data_write_thread;
     
+    public TextView textView2;
+    
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -129,8 +133,11 @@ public class ODMonitorActivity extends Activity{
 		debug_view = (TextView)findViewById(R.id.DebugView);
 		led_connect_status = (ImageView)findViewById(R.id.ConnectStatus);
 		
-		data_write_thread = new data_write_thread(handler);
-		data_write_thread.start();
+		//data_write_thread = new data_write_thread(handler);
+		//data_write_thread.start();
+		textView2 = (TextView) findViewById(R.id.test);
+		textView2.setText( Html.fromHtml("<a href=\"http://www.maestrogen.com/ftp/i-track/user_manual.html\">iTrack User Manual</a>") );
+		textView2.setMovementMethod(LinkMovementMethod.getInstance());
                
         button1 = (ImageButton) findViewById(R.id.Button1);
         button1.setOnClickListener(new View.OnClickListener()

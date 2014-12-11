@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
  <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
     <TextView
@@ -18,24 +20,37 @@
         android:text="TextView2"
         android:layout_centerHorizontal="true">
     </TextView>
-    <Button
-        android:id="@+id/button_save"
-        android:text="save script"
-        android:layout_width="150dp"
-        android:layout_height="80dp"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true">
-    </Button>
     
     <Button
         android:id="@+id/button_add"
         android:text="add item"
         android:layout_width="150dp" 
-        android:layout_height="wrap_content" 
-        android:layout_alignTop="@+id/button_save" 
-        android:layout_alignBottom="@+id/button_save"
+        android:layout_height="80dp" 
         android:layout_centerHorizontal="true"
-        android:layout_toLeftOf="@+id/button_save"
+        android:layout_alignParentBottom="true">
+    </Button>
+    
+    <Button
+        android:id="@+id/button_clear_all"
+        android:text="clear_all"
+        android:layout_width="150dp" 
+        android:layout_height="wrap_content" 
+        android:layout_alignTop="@+id/button_add" 
+        android:layout_alignBottom="@+id/button_add"
+        android:layout_centerHorizontal="true"
+        android:layout_toRightOf="@+id/button_add"
+        android:layout_alignParentBottom="true">
+    </Button>
+        
+    <Button
+        android:id="@+id/button_save"
+        android:text="save script"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/button_add" 
+        android:layout_alignBottom="@+id/button_add"
+        android:layout_centerHorizontal="true"
+        android:layout_toRightOf="@+id/button_clear_all"
         android:layout_alignParentBottom="true">
     </Button>
     

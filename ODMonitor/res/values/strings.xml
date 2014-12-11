@@ -3,4 +3,5 @@
     <string name="hello">Hello World, LEDActivity!</string>
     <string name="app_name">FTDI Demo</string>
     <string name="submit">Send</string>
+    <string name="link"><a href="http://www.maestrogen.com/ftp/i-track/user_manual.html">iTrack User Manual</a></string>
 </resources>

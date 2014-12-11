@@ -3,4 +3,44 @@
      <array name="list_menu">  
          <item>delete</item>  
      </array>
+     
+      <array name="read_sensor_enable">  
+         <item>false</item>  
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+     </array>
+     
+      <array name="shaker_on_enable">  
+         <item>false</item>  
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+     </array>
+     
+      <array name="shaker_off_enable">  
+         <item>false</item>  
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+     </array>
+     
+      <array name="shaker_set_temperature_enable">  
+         <item>false</item>  
+         <item>false</item> 
+         <item>false</item> 
+         <item>true</item> 
+         <item>false</item> 
+     </array>
+     
+      <array name="shaker_set_speed_enable">  
+         <item>false</item>  
+         <item>false</item> 
+         <item>false</item> 
+         <item>false</item> 
+         <item>true</item> 
+     </array>
 </resources>

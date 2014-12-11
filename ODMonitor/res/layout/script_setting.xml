@@ -3,6 +3,8 @@
     android:layout_marginTop="20dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -22,7 +24,6 @@
             android:id="@+id/spinner_instruct"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-
     </LinearLayout>
 
     <LinearLayout
@@ -42,7 +43,6 @@
             android:id="@+id/spinner_repeat_from"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-
     </LinearLayout>
     
     <LinearLayout
@@ -59,14 +59,12 @@
             android:text="Repeat count" />
 
         <EditText
-            android:id="@+id/editText1"
+            android:id="@+id/editText_repeat_count"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
             android:inputType="number" >
-
-            <requestFocus />
         </EditText>
 
     </LinearLayout>
@@ -85,14 +83,12 @@
             android:text="Repeat Time" />
 
         <EditText
-            android:id="@+id/editText2"
+            android:id="@+id/editText_repeat_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
             android:inputType="number" >
-
-            <requestFocus />
         </EditText>
 
     </LinearLayout>
@@ -108,17 +104,15 @@
             android:id="@+id/textView5"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="Shaker Temp" />
+            android:text="Shaker Temperature" />
 
         <EditText
-            android:id="@+id/editText3"
+            android:id="@+id/editText_shaker_temperature"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
             android:inputType="number" >
-
-            <requestFocus />
         </EditText>
 
     </LinearLayout>
@@ -136,15 +130,13 @@
             android:layout_height="wrap_content"
             android:text="Shaker Speed" />
 
-        <EditText
-            android:id="@+id/editText4"
+       <EditText
+            android:id="@+id/editText_shaker_speed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
             android:inputType="number" >
-
-            <requestFocus />
         </EditText>
 
     </LinearLayout>
