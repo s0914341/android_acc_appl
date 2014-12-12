@@ -99,12 +99,12 @@ public class experiment_script_data implements Serializable{
         SCRIPT_SETTING_ENABLE_LIST = Collections.unmodifiableList(list);
     }
     
-    private byte instruct = 0;
+    private byte instruct = INSTRUCT_READ_SENSOR;
     private byte repeat_from = 0;
-    private byte repeat_count = 0;
-    private byte repeat_time = 0;
-    private int shaker_temperature = 0;
-    private int shaker_speed = 0;
+    private byte repeat_count = 1;
+    private byte repeat_time = 1;
+    private int shaker_temperature = 25;
+    private int shaker_speed = 20;
     
     public void set_instruct_value(byte data) {
 	    instruct = data;

@@ -72,16 +72,7 @@ public class script_activity_list extends Activity {
 	    for (int i = 0; i < 5; i++) {
 	        HashMap<String, Object> item_string_view = new HashMap<String, Object>();
 	        experiment_script_data item_data = new experiment_script_data();
-	        String str_index;
-	        int index = list.size();
-            str_index = String.format("%d", index);
-            item_string_view.put(key_picture, mPics[i]);
-            item_string_view.put(key_index, str_index);
-            item_string_view.put(key_instruction, experiment_script_data.SCRIPT_INSTRUCT.get(0));
-            item_string_view.put(key_repeat_from,"from¡G"+"3" );
-            item_string_view.put(key_repeat_count, "count¡G"+"5");
-            item_string_view.put(key_repeat_time, "time¡G"+"30"+"min");
-	        item_string_view.put(key_shaker_argument, "shaker command¡G"+"set speed");
+	        refresh_script_list_view(list.size(), item_data, item_string_view);
 	        list.add(item_string_view);
 	        
 	        experiment_item.put(item_string_view, item_data);
@@ -107,8 +98,9 @@ public class script_activity_list extends Activity {
 	    	 
 	        public void onItemClick(AdapterView<?> arg0, View view,
 	                int position, long id) {
-	            Log.d(Tag, "ListViewItem = " + id);
-	            show_script_setting_dialog(id);
+	            Log.d(Tag, "ListViewItem id = " + id);
+	            Log.d(Tag, "ListViewItem position= " + position);
+	            show_script_setting_dialog(id, position);
 	        }
 	    });
 	    
@@ -119,15 +111,7 @@ public class script_activity_list extends Activity {
         		try {
                     HashMap<String, Object> item_string_view = new HashMap<String, Object>();
                     experiment_script_data item_data = new experiment_script_data();
-                    String str_index;
-                    str_index = String.format("%d", list.size());
-                    item_string_view.put(key_picture, mPics[item_data.get_instruct_value()]);
-                    item_string_view.put(key_index, str_index);
-                    item_string_view.put(key_instruction, item_data.get_instruct_string());
-                    item_string_view.put(key_repeat_from,"from¡G"+ item_data.get_repeat_from_string());
-                    item_string_view.put(key_repeat_count, "count¡G"+item_data.get_repeat_count_string());
-                    item_string_view.put(key_repeat_time, "time¡G"+item_data.get_repeat_time_string()+"min");
-                    item_string_view.put(key_shaker_argument, "shaker command¡G"+"set speed");
+                    refresh_script_list_view(list.size(), item_data, item_string_view);
             	    list.add(item_string_view);
             	    experiment_item.put(item_string_view, item_data);
                     adapter.notifyDataSetChanged();
@@ -171,9 +155,14 @@ public class script_activity_list extends Activity {
 	    String menuItemName = menuItems[menuItemIndex];
 	    Log.d(Tag, "onContextItemSelected = " + info.id);
 	    
-	    list.remove((int)info.id);
 	    experiment_item.remove(list.get((int)info.id));
+	    list.remove((int)info.id);
+	    
+	    for(int i = (int)info.id; i < list.size(); i++) {
+	    	refresh_script_list_view(i, (experiment_script_data)experiment_item.get(list.get(i)), list.get(i));
+	    }
         adapter.notifyDataSetChanged();
+        
 	   // String listItemName = Countries[info.position];
 
 	  //  TextView text = (TextView)findViewById(R.id.footer);
@@ -193,13 +182,14 @@ public class script_activity_list extends Activity {
 	    return values;
 	}
 	
-	public void show_script_setting_dialog(long id) {
+	public void show_script_setting_dialog(long id, int position) {
 		    //In the method that is called when click on "update"
 	    	Intent intent = new Intent(this, script_setting_activity.class);
 	    	intent.setClass(script_activity_list.this, script_setting_activity.class); 
 	    	intent.putExtra("send_experiment_script_data", (experiment_script_data)experiment_item.get(list.get((int)id))); 
 	    	intent.putExtra("send_total_item", list.size()); 
 	    	intent.putExtra("send_item_id", id); 
+	    	intent.putExtra("send_item_position", position); 
 	    	
 	    	//startActivity(intent);
 	    	
@@ -211,28 +201,74 @@ public class script_activity_list extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 	    super.onActivityResult(requestCode, resultCode, data);
 	    //Retrieve data in the intent
-	/*    long id = intent.getLongExtra("return_item_id", -1);
-	    if (id >= 0) {
-	    	experiment_script_data item_data = (experiment_script_data)intent.getSerializableExtra("return_experiment_script_data");
-	        experiment_item.remove(list.get((int)id));
-	        experiment_item.put(list.get((int)id), item_data);
-	    }
-	    
-	    Log.d(Tag, "onActivityResult = " + id);*/
-		
 		if (requestCode == PICK_CONTACT_REQUEST) {
 	        // Make sure the request was successful
 	        if (resultCode == RESULT_OK) {
 	        	long id = data.getLongExtra("return_item_id", -1);
-	     	    if (id >= 0) {
-	     	    	experiment_script_data item_data = (experiment_script_data)data.getSerializableExtra("return_experiment_script_data");
+	        	int position = data.getIntExtra("return_item_position", -1);
+	     	    if (id >= 0 && position >= 0) {
+	     	        experiment_script_data item_data = (experiment_script_data)data.getSerializableExtra("return_experiment_script_data");  
 	     	        experiment_item.remove(list.get((int)id));
-	     	        experiment_item.put(list.get((int)id), item_data);
+	     	        
+	     	      //  HashMap<String, Object> item_string_view = new HashMap<String, Object>();
+	     	     //   refresh_script_list_view((int)id, item_data, item_string_view);
+	   	          //  list.set(position, item_string_view);
+	     	     //   experiment_item.put(list.get((int)id), item_data);
+	     	        refresh_script_list_view((int)id, item_data, list.get(position));
+	   	            adapter.notifyDataSetChanged();  
 	     	    }
 	     	    
 	     	    Log.d(Tag, "onActivityResult = " + id);
 	        }
 	    }
+	}
+	
+	public void refresh_script_list_view(int id,  experiment_script_data item_data, HashMap<String, Object> item_string_view) {
+		 String str_index;
+        str_index = String.format("%d", id);
+        int instruct = item_data.get_instruct_value();
+        
+        item_string_view.put(key_picture, mPics[instruct]);
+        item_string_view.put(key_index, str_index);
+        item_string_view.put(key_instruction, experiment_script_data.SCRIPT_INSTRUCT.get(instruct));
+        switch(instruct) {
+            case  experiment_script_data.INSTRUCT_READ_SENSOR:
+            case  experiment_script_data.INSTRUCT_SHAKER_ON:
+            case  experiment_script_data.INSTRUCT_SHAKER_OFF:
+	                item_string_view.put(key_repeat_from,"");
+	                item_string_view.put(key_repeat_count, "");
+	                item_string_view.put(key_repeat_time, "");
+	   	            item_string_view.put(key_shaker_argument, "");
+            break;
+            
+            case  experiment_script_data.INSTRUCT_REPEAT_COUNT:
+	                item_string_view.put(key_repeat_from, "from¡G"+item_data.get_repeat_from_string()+"   ");
+	                item_string_view.put(key_repeat_count, "count¡G"+item_data.get_repeat_count_string());
+	                item_string_view.put(key_repeat_time, "");
+	   	            item_string_view.put(key_shaker_argument, "");
+            break;
+            
+            case  experiment_script_data.INSTRUCT_REPEAT_TIME:
+	                item_string_view.put(key_repeat_from, "from¡G"+item_data.get_repeat_from_string()+"   ");
+	                item_string_view.put(key_repeat_count, "");
+	                item_string_view.put(key_repeat_time, "time¡G"+item_data.get_repeat_time_string()+"min");
+	   	            item_string_view.put(key_shaker_argument, "");
+            break;
+            
+            case  experiment_script_data.INSTRUCT_SHAKER_SET_SPEED:
+	                item_string_view.put(key_repeat_from, "");
+	                item_string_view.put(key_repeat_count, "");
+	                item_string_view.put(key_repeat_time, "");
+	   	            item_string_view.put(key_shaker_argument, "shaker speed¡G" + item_data.get_shaker_speed_string());
+            break;
+            
+            case  experiment_script_data.INSTRUCT_SHAKER_SET_TEMPERATURE:
+	                item_string_view.put(key_repeat_from, "");
+	                item_string_view.put(key_repeat_count, "");
+	                item_string_view.put(key_repeat_time, "");
+	   	            item_string_view.put(key_shaker_argument, "shaker temperature¡G" + item_data.get_shaker_temperature_string());
+            break;
+        }
 	}
 	
 	@Override
