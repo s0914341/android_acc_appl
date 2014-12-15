@@ -235,4 +235,52 @@ public class experiment_script_data implements Serializable{
     	
     	return buffer;
     }
+    
+    public int set_buffer(byte[] buffer) {
+    	byte[] instruct_bytes = new byte[INSTRUCT_SIZE];
+        int ret = -1;
+        
+    	if (buffer.length == BUFFER_SIZE) {
+    		System.arraycopy(buffer, INSTRUCT_START, instruct_bytes, 0, INSTRUCT_SIZE);
+            instruct = ByteBuffer.wrap(instruct_bytes, 0, INSTRUCT_SIZE).getInt();
+            
+    		switch (instruct) {
+    	        case INSTRUCT_SHAKER_SET_TEMPERATURE:
+    	    	    byte[] shaker_temperature_bytes = new byte[ARGUMENT1_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT1_START, shaker_temperature_bytes, 0, ARGUMENT1_SIZE);
+    	            shaker_temperature = ByteBuffer.wrap(shaker_temperature_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	        break;
+    	    
+    	        case INSTRUCT_SHAKER_SET_SPEED:
+    	        	byte[] shaker_speed_bytes = new byte[ARGUMENT1_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT1_START, shaker_speed_bytes, 0, ARGUMENT1_SIZE);
+    	            shaker_speed = ByteBuffer.wrap(shaker_speed_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	        break;
+    	    
+    	        case INSTRUCT_REPEAT_COUNT: {
+    	        	byte[] repeat_count_bytes = new byte[ARGUMENT1_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT1_START, repeat_count_bytes, 0, ARGUMENT1_SIZE);
+    	            repeat_count = ByteBuffer.wrap(repeat_count_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	            
+    	            byte[] repeat_from_bytes = new byte[ARGUMENT2_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT2_START, repeat_from_bytes, 0, ARGUMENT2_SIZE);
+    	            repeat_from = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE).getInt();
+    	        } break;
+        	    
+        	    case INSTRUCT_REPEAT_TIME: {
+        	    	byte[] repeat_time_bytes = new byte[ARGUMENT1_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT1_START, repeat_time_bytes, 0, ARGUMENT1_SIZE);
+    	            repeat_time = ByteBuffer.wrap(repeat_time_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	            
+    	            byte[] repeat_from_bytes = new byte[ARGUMENT2_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT2_START, repeat_from_bytes, 0, ARGUMENT2_SIZE);
+    	            repeat_from = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE).getInt();
+        	    } break;
+    	    }
+    		
+		    ret = 0;
+		}
+		
+		return ret;
+    }
 }

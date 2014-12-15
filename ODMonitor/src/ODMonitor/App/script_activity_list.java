@@ -60,6 +60,7 @@ public class script_activity_list extends Activity {
 	Button button_add_item;
 	Button button_clear_all;
 	Button button_save_script;
+	Button button_load_script;
 	
 	private static final int[] mPics=new int[]{
         R.drawable.sensor_read,R.drawable.on,R.drawable.off, R.drawable.shaker_temperature,R.drawable.shaker_speed,
@@ -160,6 +161,48 @@ public class script_activity_list extends Activity {
         	
 		            write_file.flush_close_file();
 		            Toast.makeText(script_activity_list.this, "Save Script Success", Toast.LENGTH_SHORT).show(); 
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}	
+        	}
+		});
+	    
+	    button_load_script = (Button) findViewById(R.id.button_load);
+	    button_load_script.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {
+        		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
+        		try {
+        			int file_len = 0;
+        			file_len = read_file.open_read_file(read_file.generate_filename_no_date());
+        			if (file_len > 0) {
+        				byte[] read_buf = new byte[file_len];
+        				read_file.read_file(read_buf);
+        			
+        				list.clear();
+            			experiment_item.clear();
+        			    for (int i = 0; i < file_len/experiment_script_data.BUFFER_SIZE; i++) {
+        			        experiment_script_data script = new experiment_script_data();
+        				    byte[] set_data_bytes = new byte[experiment_script_data.BUFFER_SIZE];
+        				    byte[] index_bytes = new byte[experiment_script_data.INDEX_SIZE];
+        				    int index = 0;
+        				    int position = 0;
+        				    HashMap<String, Object> item_string_view = new HashMap<String, Object>();
+        				 
+        				    System.arraycopy(read_buf, i*experiment_script_data.BUFFER_SIZE, index_bytes, 0, experiment_script_data.INDEX_SIZE);
+        				    index = ByteBuffer.wrap(index_bytes, 0, experiment_script_data.INDEX_SIZE).getInt();
+        				    System.arraycopy(read_buf, i*experiment_script_data.BUFFER_SIZE, set_data_bytes, 0, experiment_script_data.BUFFER_SIZE);
+        				    script.set_buffer(set_data_bytes);
+        				
+        				    position = index-1;
+        				    refresh_script_list_view(position, script, item_string_view);
+        				    list.add(position, item_string_view);
+        			        if (null == experiment_item.put(item_string_view, script))
+        			        	Log.d(Tag, "button_load_script position = " + index);
+        			    }
+        			    adapter.notifyDataSetChanged();
+		                Toast.makeText(script_activity_list.this, "Load Script Success", Toast.LENGTH_SHORT).show(); 
+        			}
         		} catch (IOException e) {
         			// TODO Auto-generated catch block
         			e.printStackTrace();

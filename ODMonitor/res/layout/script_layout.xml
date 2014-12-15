@@ -23,16 +23,15 @@
     
     <Button
         android:id="@+id/button_add"
-        android:text="add item"
+        android:text="@string/script_add_item"
         android:layout_width="150dp" 
         android:layout_height="80dp" 
-        android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true">
     </Button>
     
     <Button
         android:id="@+id/button_clear_all"
-        android:text="clear_all"
+        android:text="@string/script_clear_all"
         android:layout_width="150dp" 
         android:layout_height="wrap_content" 
         android:layout_alignTop="@+id/button_add" 
@@ -44,13 +43,25 @@
         
     <Button
         android:id="@+id/button_save"
-        android:text="save script"
+        android:text="@string/script_save_script"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/button_add" 
         android:layout_alignBottom="@+id/button_add"
         android:layout_centerHorizontal="true"
         android:layout_toRightOf="@+id/button_clear_all"
+        android:layout_alignParentBottom="true">
+    </Button>
+    
+    <Button
+        android:id="@+id/button_load"
+        android:text="@string/script_load_script"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/button_add" 
+        android:layout_alignBottom="@+id/button_add"
+        android:layout_centerHorizontal="true"
+        android:layout_toRightOf="@+id/button_save"
         android:layout_alignParentBottom="true">
     </Button>
     
