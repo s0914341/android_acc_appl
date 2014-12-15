@@ -52,6 +52,13 @@ public final class R {
         public static final int image90=0x7f02001a;
         public static final int line=0x7f02001b;
         public static final int longborder=0x7f02001c;
+        public static final int off=0x7f02001d;
+        public static final int on=0x7f02001e;
+        public static final int repeat_count=0x7f02001f;
+        public static final int repeat_time=0x7f020020;
+        public static final int sensor_read=0x7f020021;
+        public static final int shaker_speed=0x7f020022;
+        public static final int shaker_temperature=0x7f020023;
     }
     public static final class id {
         public static final int Button1=0x7f0a0008;

@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.util.SparseBooleanArray;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +25,16 @@ public class experiment_script_data implements Serializable{
 	public static final int  INSTRUCT_SHAKER_SET_SPEED = 4;
 	public static final int  INSTRUCT_REPEAT_COUNT = 5;
 	public static final int  INSTRUCT_REPEAT_TIME = 6;
+	
+	public static final int  INDEX_START = 0;
+	public static final int  INDEX_SIZE = 4;
+	public static final int  INSTRUCT_START = INDEX_SIZE;
+	public static final int  INSTRUCT_SIZE = 4;
+	public static final int  ARGUMENT1_START = INDEX_SIZE+INSTRUCT_SIZE;
+	public static final int  ARGUMENT1_SIZE = 4;
+	public static final int  ARGUMENT2_START = INDEX_SIZE+INSTRUCT_SIZE+ARGUMENT1_SIZE;
+	public static final int  ARGUMENT2_SIZE = 4;
+	public static final int  BUFFER_SIZE = INDEX_SIZE+INSTRUCT_SIZE+ARGUMENT1_SIZE+ARGUMENT2_SIZE;
 	public static final Map<Integer, String> SCRIPT_INSTRUCT;
     static {
         Map<Integer, String> aMap = new HashMap<Integer, String>();
@@ -99,31 +111,31 @@ public class experiment_script_data implements Serializable{
         SCRIPT_SETTING_ENABLE_LIST = Collections.unmodifiableList(list);
     }
     
-    private byte instruct = INSTRUCT_READ_SENSOR;
-    private byte repeat_from = 0;
-    private byte repeat_count = 1;
-    private byte repeat_time = 1;
+    private int instruct = INSTRUCT_READ_SENSOR;
+    private int repeat_from = 0;
+    private int repeat_count = 1;
+    private int repeat_time = 1;
     private int shaker_temperature = 25;
     private int shaker_speed = 20;
     
-    public void set_instruct_value(byte data) {
+    public void set_instruct_value(int data) {
 	    instruct = data;
 	}
     
     public int get_instruct_value() {
-		return (int)instruct;
+		return instruct;
 	}
     
     public String get_instruct_string() {
 		return SCRIPT_INSTRUCT.get(get_instruct_value());
 	}
     
-    public void set_repeat_from_value(byte data) {
+    public void set_repeat_from_value(int data) {
     	repeat_from = data;
 	}
     
     public int get_repeat_from_value() {
-		return (int)repeat_from;
+		return repeat_from;
 	}
     
     public String get_repeat_from_string() {
@@ -132,12 +144,12 @@ public class experiment_script_data implements Serializable{
 		return str;
 	}
     
-    public void set_repeat_count_value(byte data) {
+    public void set_repeat_count_value(int data) {
     	repeat_count = data;
 	}
     
     public int get_repeat_count_value() {
-		return (int)repeat_count;
+		return repeat_count;
 	}
     
     public String get_repeat_count_string() {
@@ -146,12 +158,12 @@ public class experiment_script_data implements Serializable{
 		return str;
 	}
     
-    public void set_repeat_time_value(byte data) {
+    public void set_repeat_time_value(int data) {
     	repeat_time = data;
 	}
     
     public int get_repeat_time_value() {
-		return (int)repeat_time;
+		return repeat_time;
 	}
     
     public String get_repeat_time_string() {
@@ -187,4 +199,40 @@ public class experiment_script_data implements Serializable{
     	str = String.format("%d", get_shaker_speed_value());
 		return str;
 	}
+    
+    public byte[] get_buffer() {
+    	byte[] buffer = new byte[BUFFER_SIZE];
+    	Arrays.fill(buffer, (byte)0);
+    	
+    	byte[] instruct_bytes = ByteBuffer.allocate(4).putInt(instruct).array();
+    	System.arraycopy(instruct_bytes, 0, buffer, INSTRUCT_START, INSTRUCT_SIZE);
+ 
+    	switch (instruct) {
+    	    case INSTRUCT_SHAKER_SET_TEMPERATURE:
+    	    	byte[] shaker_temperature_bytes = ByteBuffer.allocate(4).putInt(shaker_temperature).array();
+    	    	System.arraycopy(shaker_temperature_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
+    	    break;
+    	    
+    	    case INSTRUCT_SHAKER_SET_SPEED:
+    	    	byte[] shaker_speed_bytes = ByteBuffer.allocate(4).putInt(shaker_speed).array();
+    	    	System.arraycopy(shaker_speed_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
+    	    break;
+    	    
+    	    case INSTRUCT_REPEAT_COUNT: {
+    	    	byte[] repeat_from_bytes = ByteBuffer.allocate(4).putInt(repeat_from).array();
+    	    	byte[] repeat_count_bytes = ByteBuffer.allocate(4).putInt(repeat_count).array();
+    	    	System.arraycopy(repeat_from_bytes, 0, buffer, ARGUMENT2_START, ARGUMENT2_SIZE);
+    	    	System.arraycopy(repeat_count_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
+    	    } break;
+        	    
+        	case INSTRUCT_REPEAT_TIME: {
+        		byte[] repeat_from_bytes = ByteBuffer.allocate(4).putInt(repeat_from).array();
+        		byte[] repeat_time_bytes = ByteBuffer.allocate(4).putInt(repeat_time).array();
+        		System.arraycopy(repeat_from_bytes, 0, buffer, ARGUMENT2_START, ARGUMENT2_SIZE);
+    	    	System.arraycopy(repeat_time_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
+        	} break;
+    	}
+    	
+    	return buffer;
+    }
 }

@@ -1,6 +1,7 @@
 package ODMonitor.App;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import org.achartengine.chartdemo.demo.chart.XYChartBuilder;
 import ODMonitor.App.R.drawable;
 import ODMonitor.App.data.experiment_script_data;
 import ODMonitor.App.data.script_data_exchange;
+import ODMonitor.App.file.file_operate_byte_array;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
@@ -31,9 +33,11 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class script_activity_list extends Activity {
 	public String Tag = "script_activity_list";
+	private final static String key_experiment = "experiment";
 	private final static String key_picture = "picture";
 	private final static String key_index = "index"; 
 	private final static String key_instruction = "instruction"; 
@@ -41,6 +45,10 @@ public class script_activity_list extends Activity {
 	private final static String key_repeat_count = "repeat_count"; 
 	private final static String key_repeat_time = "repeat_time";
 	private final static String key_shaker_argument = "shaker_argument";
+	
+	private static final int INSERT_BEFORE=Menu.FIRST-1;  
+    private static final int DELETE=Menu.FIRST;  
+    private static final int INSERT_AFTER=Menu.FIRST+1;  
 	
 	private final static int PICK_CONTACT_REQUEST = 0;
     private String[] mMenuText;
@@ -51,10 +59,11 @@ public class script_activity_list extends Activity {
 	public ListView list_view;
 	Button button_add_item;
 	Button button_clear_all;
+	Button button_save_script;
 	
 	private static final int[] mPics=new int[]{
-        R.drawable.image50,R.drawable.image35,R.drawable.image20, R.drawable.image100,R.drawable.image50,
-        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
+        R.drawable.sensor_read,R.drawable.on,R.drawable.off, R.drawable.shaker_temperature,R.drawable.shaker_speed,
+        R.drawable.repeat_count,R.drawable.repeat_time,R.drawable.image50, R.drawable.image50,R.drawable.image50,
         R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
         R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
         R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
@@ -70,12 +79,13 @@ public class script_activity_list extends Activity {
 	    list_view = (ListView) findViewById(R.id.listView1);
 	    
 	    for (int i = 0; i < 5; i++) {
-	        HashMap<String, Object> item_string_view = new HashMap<String, Object>();
+	    	add_new_instruct(list.size(),  experiment_item, list);
+	      /* HashMap<String, Object> item_string_view = new HashMap<String, Object>();
 	        experiment_script_data item_data = new experiment_script_data();
 	        refresh_script_list_view(list.size(), item_data, item_string_view);
 	        list.add(item_string_view);
 	        
-	        experiment_item.put(item_string_view, item_data);
+	        experiment_item.put(item_string_view, item_data);*/
 	    }
 	    
 	  //·s¼WSimpleAdapter
@@ -109,11 +119,7 @@ public class script_activity_list extends Activity {
 	    button_add_item.setOnClickListener(new View.OnClickListener() {
         	public void onClick(View v) {
         		try {
-                    HashMap<String, Object> item_string_view = new HashMap<String, Object>();
-                    experiment_script_data item_data = new experiment_script_data();
-                    refresh_script_list_view(list.size(), item_data, item_string_view);
-            	    list.add(item_string_view);
-            	    experiment_item.put(item_string_view, item_data);
+        			add_new_instruct(list.size(),  experiment_item, list);
                     adapter.notifyDataSetChanged();
                 } catch (NullPointerException e) {
                     Log.i(Tag, "Tried to add null value");
@@ -133,7 +139,57 @@ public class script_activity_list extends Activity {
                 }
         	}
 		});
+	    
+	    button_save_script = (Button) findViewById(R.id.button_save);
+	    button_save_script.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {
+        		file_operate_byte_array write_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
+        		try {
+        			write_file.delete_file(write_file.generate_filename_no_date());
+        			write_file.create_file(write_file.generate_filename_no_date());
+        			
+        			for (int i = 0; i < list.size(); i++) {
+        				 experiment_script_data temp;
+        					
+        			     temp = (experiment_script_data)experiment_item.get(list.get(i));
+        			     byte[] buffer = temp.get_buffer();
+        			     byte[] index_bytes = ByteBuffer.allocate(4).putInt(i+1).array();
+        	        	 System.arraycopy(index_bytes, 0, buffer, experiment_script_data.INDEX_START, experiment_script_data.INDEX_SIZE);
+        			     write_file.write_file(buffer);
+        			}
+        	
+		            write_file.flush_close_file();
+		            Toast.makeText(script_activity_list.this, "Save Script Success", Toast.LENGTH_SHORT).show(); 
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}	
+        	}
+		});
     }
+	
+	protected void add_new_instruct(int position, HashMap<Object, Object> item_data, List<HashMap<String,Object>> local_list) {
+		HashMap<String, Object> item_string_view = new HashMap<String, Object>();
+        experiment_script_data new_item_data = new experiment_script_data();
+        refresh_script_list_view(position, new_item_data, item_string_view);
+        local_list.add(position, item_string_view);
+        if (null == item_data.put(item_string_view, new_item_data))
+        	Log.d(Tag, "add_new_instruct position = " + position);
+	}
+	
+	protected void refresh_experiment_script_index(int position, HashMap<Object, Object> item_data, List<HashMap<String,Object>> local_list) {
+		Log.d(Tag, "refresh_experiment_script_index size = " + item_data.size()); 
+        for(int i = position; i < local_list.size(); i++) {
+	        experiment_script_data temp;
+	
+	        temp = (experiment_script_data)item_data.get(local_list.get(i));
+	        item_data.remove(local_list.get(i));
+	        refresh_script_list_view(i, temp, local_list.get(i));
+	        if (null == item_data.put(local_list.get(i), temp))
+	        	 Log.d(Tag, "refresh_experiment_script_index index = " + i);
+        }	
+        Log.d(Tag, "refresh_experiment_script_index size = " + item_data.size()); 
+	}
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -153,20 +209,37 @@ public class script_activity_list extends Activity {
 	    int menuItemIndex = item.getItemId();
 	    String[] menuItems = getResources().getStringArray(R.array.list_menu);
 	    String menuItemName = menuItems[menuItemIndex];
-	    Log.d(Tag, "onContextItemSelected = " + info.id);
+	    Log.d(Tag, "onContextItemSelected index = " + menuItemIndex); 
+	    int position = (int) adapter.getItemId(info.position); 
 	    
-	    experiment_item.remove(list.get((int)info.id));
-	    list.remove((int)info.id);
-	    
-	    for(int i = (int)info.id; i < list.size(); i++) {
-	    	refresh_script_list_view(i, (experiment_script_data)experiment_item.get(list.get(i)), list.get(i));
+	    switch (menuItemIndex) {
+	        case INSERT_BEFORE:
+	        	add_new_instruct(position, experiment_item, list);
+	        	refresh_experiment_script_index(position, experiment_item, list);
+        	    adapter.notifyDataSetChanged();
+	        break;
+	        
+	        case DELETE:
+	        	experiment_item.remove(list.get(position));
+	        	list.remove(position);
+	        	refresh_experiment_script_index(position, experiment_item, list);
+                adapter.notifyDataSetChanged();
+            break;
+            
+	        case INSERT_AFTER:
+	        	int insert_position = position+1;
+	        	add_new_instruct(insert_position,  experiment_item, list);
+	        	if((insert_position++) < list.size())
+	        	    refresh_experiment_script_index(insert_position, experiment_item, list);
+        	    adapter.notifyDataSetChanged();
+	        break;
 	    }
-        adapter.notifyDataSetChanged();
         
 	   // String listItemName = Countries[info.position];
 
 	  //  TextView text = (TextView)findViewById(R.id.footer);
 	  //  text.setText(String.format("Selected %s for item %s", menuItemName, listItemName));
+        Log.d(Tag, "onContextItemSelected position = " + position);
 	    return true;
 	}
 	
@@ -186,7 +259,7 @@ public class script_activity_list extends Activity {
 		    //In the method that is called when click on "update"
 	    	Intent intent = new Intent(this, script_setting_activity.class);
 	    	intent.setClass(script_activity_list.this, script_setting_activity.class); 
-	    	intent.putExtra("send_experiment_script_data", (experiment_script_data)experiment_item.get(list.get((int)id))); 
+	    	intent.putExtra("send_experiment_script_data", (experiment_script_data)experiment_item.get(list.get(position))); 
 	    	intent.putExtra("send_total_item", list.size()); 
 	    	intent.putExtra("send_item_id", id); 
 	    	intent.putExtra("send_item_position", position); 
@@ -208,26 +281,29 @@ public class script_activity_list extends Activity {
 	        	int position = data.getIntExtra("return_item_position", -1);
 	     	    if (id >= 0 && position >= 0) {
 	     	        experiment_script_data item_data = (experiment_script_data)data.getSerializableExtra("return_experiment_script_data");  
-	     	        experiment_item.remove(list.get((int)id));
+	     	        experiment_item.remove(list.get(position));
 	     	        
 	     	      //  HashMap<String, Object> item_string_view = new HashMap<String, Object>();
 	     	     //   refresh_script_list_view((int)id, item_data, item_string_view);
 	   	          //  list.set(position, item_string_view);
-	     	     //   experiment_item.put(list.get((int)id), item_data);
-	     	        refresh_script_list_view((int)id, item_data, list.get(position));
+	     	       // experiment_item.put(list.get((int)id), item_data);
+	     	        refresh_script_list_view(position, item_data, list.get(position));
+	     	        experiment_item.put(list.get(position), item_data);
 	   	            adapter.notifyDataSetChanged();  
 	     	    }
 	     	    
-	     	    Log.d(Tag, "onActivityResult = " + id);
+	     	    Log.d(Tag, "onActivityResult position = " + position);
 	        }
 	    }
 	}
 	
-	public void refresh_script_list_view(int id,  experiment_script_data item_data, HashMap<String, Object> item_string_view) {
+	public void refresh_script_list_view(int index,  experiment_script_data item_data, HashMap<String, Object> item_string_view) {
 		 String str_index;
-        str_index = String.format("%d", id);
+        str_index = String.format("%d", index+1);
         int instruct = item_data.get_instruct_value();
         
+        /* avoid item_string_view object is the same for HashMap, need let item_string_view has a key value always different */
+        item_string_view.put(key_experiment, item_data);
         item_string_view.put(key_picture, mPics[instruct]);
         item_string_view.put(key_index, str_index);
         item_string_view.put(key_instruction, experiment_script_data.SCRIPT_INSTRUCT.get(instruct));

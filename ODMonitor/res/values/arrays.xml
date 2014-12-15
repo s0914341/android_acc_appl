@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
      <array name="list_menu">  
-         <item>delete</item>  
+         <item>Insert before</item>
+         <item>Delete</item>  
+         <item>Insert after</item>
      </array>
      
       <array name="read_sensor_enable">  
