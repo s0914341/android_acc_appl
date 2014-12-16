@@ -111,8 +111,8 @@ public class OD_calculate {
         	    
         	    upscale_data = upscale_raw_data[channel_index];
         	    if (upscale_data > 0) {
-        	    	//channels_od[channel_index] =  CDbl(Log((4095 * Upscale_factors[0]) / upscale_data));
-        	    	//channels_od[channel_index] = channels_od[channel_index]/Log(10);
+        	    	channels_od[channel_index] =  Math.log10((4095 * Upscale_factors[0]) / upscale_data);
+        	    	channels_od[channel_index] = channels_od[channel_index]/Math.log10(10);
         	    	primitive_od = primitive_od + channels_od[channel_index];
         	    	channel_count++;
         	    } else {
@@ -123,28 +123,6 @@ public class OD_calculate {
         	
         	if (channel_count > 0)
         		final_od = primitive_od/channel_count;
-        	
-        
-        		
-        	
-  
-   /*       If Ref_OD_Count < 25 Then
-            Ref_OD = Ref_OD + Final_OD
-            Ref_OD_Count = Ref_OD_Count + 1
-            Final_OD = 0
-            If Ref_OD_Count = 25 Then
-              Ref_OD = Ref_OD / Ref_OD_Count
-              Sheet3.Range("C1").Value = Ref_OD
-            End If
-          Else
-             If channel_count > 0 Then
-               Final_OD = Final_OD - Ref_OD
-             End If
-             'If Abs(Last_OD - Final_OD) > 0.2 Then
-               'Final_OD = Last_OD
-             'End If
-             Last_OD = Final_OD
-          End If*/
         } else {
          
         }

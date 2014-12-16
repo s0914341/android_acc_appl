@@ -136,9 +136,9 @@ public class ODMonitorActivity extends Activity{
 		
 		//data_write_thread = new data_write_thread(handler);
 		//data_write_thread.start();
-		textView2 = (TextView) findViewById(R.id.test);
-		textView2.setText( Html.fromHtml("<a href=\"http://www.maestrogen.com/ftp/i-track/user_manual.html\">iTrack User Manual</a>") );
-		textView2.setMovementMethod(LinkMovementMethod.getInstance());
+	//	textView2 = (TextView) findViewById(R.id.test);
+	//	textView2.setText( Html.fromHtml("<a href=\"http://www.maestrogen.com/ftp/i-track/user_manual.html\">iTrack User Manual</a>") );
+	//	textView2.setMovementMethod(LinkMovementMethod.getInstance());
                
         button1 = (ImageButton) findViewById(R.id.Button1);
         button1.setOnClickListener(new View.OnClickListener()
