@@ -1,9 +1,11 @@
 package ODMonitor.App.file;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -20,6 +22,7 @@ public class file_operation {
 	protected File file_MetaData;
 	protected File file;
 	private BufferedWriter file_buf;
+	private BufferedReader file_buf_read;
 	//SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
 	protected SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 	protected static SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -133,11 +136,39 @@ public class file_operation {
 	
 	public int open_read_file(String filename) throws IOException {
 		int ret = -1;
+		if (sdcard.exists()) {
+			if (!file_MetaData.exists()) {
+		        file_MetaData.mkdirs();
+				Log.d(Tag, "sdcard directory exist:" + Boolean.toString(file_MetaData.exists()));
+			}
+			
+			if (file_MetaData.exists()) {
+			    file = new File(file_MetaData, filename);
+			    file_buf_read = new BufferedReader(new FileReader(file));
+		    } else {
+		    	file_buf_read = null;
+				Log.d(Tag, "Can't open read file");
+			}
+		} else {
+			file_buf_read = null;
+			Log.d(Tag, "Can't found external sdcard ");
+		}
+		
 		return ret;
 	}
 	
-	public void read_file() {
+	public String read_file() throws IOException {
+		String s = "";
+		if (file_buf_read != null) {
+		    try {
+			    s = file_buf_read.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		
+		return s;
 	}
 	
 }

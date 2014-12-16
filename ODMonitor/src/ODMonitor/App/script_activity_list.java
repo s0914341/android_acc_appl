@@ -45,12 +45,16 @@ public class script_activity_list extends Activity {
 	private final static String key_repeat_count = "repeat_count"; 
 	private final static String key_repeat_time = "repeat_time";
 	private final static String key_shaker_argument = "shaker_argument";
+	private final static String key_delay = "delay";
 	
 	private static final int INSERT_BEFORE=Menu.FIRST-1;  
     private static final int DELETE=Menu.FIRST;  
     private static final int INSERT_AFTER=Menu.FIRST+1;  
 	
 	private final static int PICK_CONTACT_REQUEST = 0;
+	
+	private final static int SCRIPT_HEADER_SIZE = 5;
+	private final static byte SCRIPT_HEADER = (byte) 0xFF;
     private String[] mMenuText;
 	private String[] mMenuSummary;
 	List<HashMap<String,Object>> list = new ArrayList<HashMap<String,Object>>();
@@ -64,11 +68,7 @@ public class script_activity_list extends Activity {
 	
 	private static final int[] mPics=new int[]{
         R.drawable.sensor_read,R.drawable.on,R.drawable.off, R.drawable.shaker_temperature,R.drawable.shaker_speed,
-        R.drawable.repeat_count,R.drawable.repeat_time,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50,
-        R.drawable.image50,R.drawable.image50,R.drawable.image50, R.drawable.image50,R.drawable.image50
+        R.drawable.repeat_count,R.drawable.repeat_time,R.drawable.delay
     };
 	
 	/** Called when the activity is first created. */
@@ -79,20 +79,12 @@ public class script_activity_list extends Activity {
 	    setContentView(R.layout.script_layout);
 	    list_view = (ListView) findViewById(R.id.listView1);
 	    
-	    for (int i = 0; i < 5; i++) {
-	    	add_new_instruct(list.size(),  experiment_item, list);
-	      /* HashMap<String, Object> item_string_view = new HashMap<String, Object>();
-	        experiment_script_data item_data = new experiment_script_data();
-	        refresh_script_list_view(list.size(), item_data, item_string_view);
-	        list.add(item_string_view);
-	        
-	        experiment_item.put(item_string_view, item_data);*/
-	    }
+	    add_default_experiment_script();
 	    
 	  //新增SimpleAdapter
 	    adapter = new SimpleAdapter(this, list, R.layout.script_list,
-	                                new String[] {key_picture, key_index, key_instruction, key_repeat_from, key_repeat_count, key_repeat_time, key_shaker_argument},
-	                                new int[] { R.id.imageView1, R.id.textViewIndex, R.id.textViewInstruction, R.id.textViewFrom, R.id.textViewCount, R.id.textViewTime, R.id.textViewShakerArgument } );
+	                                new String[] {key_picture, key_index, key_instruction, key_repeat_from, key_repeat_count, key_repeat_time, key_shaker_argument, key_delay},
+	                                new int[] { R.id.imageView1, R.id.textViewIndex, R.id.textViewInstruction, R.id.textViewFrom, R.id.textViewCount, R.id.textViewTime, R.id.textViewShakerArgument, R.id.textViewDelay } );
 	    
 	    //listview物件使用setAdapter方法（比對ListActivity是用setListAdapter）
 	    list_view.setAdapter(adapter);
@@ -148,8 +140,14 @@ public class script_activity_list extends Activity {
         		try {
         			write_file.delete_file(write_file.generate_filename_no_date());
         			write_file.create_file(write_file.generate_filename_no_date());
-        			
-        			for (int i = 0; i < list.size(); i++) {
+        			byte[] header = new byte[5];
+        			int total_instruction_number = list.size();
+        			byte[] total_instruction_number_bytes = ByteBuffer.allocate(4).putInt(total_instruction_number).array();
+    	        	System.arraycopy(total_instruction_number_bytes, 0, header, 1, 4);
+        			header[0] = SCRIPT_HEADER;
+
+        			write_file.write_file(header);
+        			for (int i = 0; i < total_instruction_number; i++) {
         				 experiment_script_data temp;
         					
         			     temp = (experiment_script_data)experiment_item.get(list.get(i));
@@ -158,6 +156,12 @@ public class script_activity_list extends Activity {
         	        	 System.arraycopy(index_bytes, 0, buffer, experiment_script_data.INDEX_START, experiment_script_data.INDEX_SIZE);
         			     write_file.write_file(buffer);
         			}
+        			experiment_script_data final_instruct = new experiment_script_data();
+        			final_instruct.set_instruct_value(experiment_script_data.INSTRUCT_FINISH);
+        			byte[] buffer = final_instruct.get_buffer();
+   			        byte[] index_bytes = ByteBuffer.allocate(4).putInt(total_instruction_number+1).array();
+   	        	    System.arraycopy(index_bytes, 0, buffer, experiment_script_data.INDEX_START, experiment_script_data.INDEX_SIZE);
+   			        write_file.write_file(buffer);
         	
 		            write_file.flush_close_file();
 		            Toast.makeText(script_activity_list.this, "Save Script Success", Toast.LENGTH_SHORT).show(); 
@@ -173,7 +177,8 @@ public class script_activity_list extends Activity {
         	public void onClick(View v) {
         		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
         		try {
-        			int file_len = 0;
+        	        int file_len = 0;
+        	        
         			file_len = read_file.open_read_file(read_file.generate_filename_no_date());
         			if (file_len > 0) {
         				byte[] read_buf = new byte[file_len];
@@ -181,19 +186,23 @@ public class script_activity_list extends Activity {
         			
         				list.clear();
             			experiment_item.clear();
-        			    for (int i = 0; i < file_len/experiment_script_data.BUFFER_SIZE; i++) {
+        			    for (int i = 0; i < (file_len-SCRIPT_HEADER_SIZE)/experiment_script_data.BUFFER_SIZE; i++) {
         			        experiment_script_data script = new experiment_script_data();
         				    byte[] set_data_bytes = new byte[experiment_script_data.BUFFER_SIZE];
         				    byte[] index_bytes = new byte[experiment_script_data.INDEX_SIZE];
+        	                int offset = (i*experiment_script_data.BUFFER_SIZE)+SCRIPT_HEADER_SIZE;
         				    int index = 0;
         				    int position = 0;
         				    HashMap<String, Object> item_string_view = new HashMap<String, Object>();
         				 
-        				    System.arraycopy(read_buf, i*experiment_script_data.BUFFER_SIZE, index_bytes, 0, experiment_script_data.INDEX_SIZE);
+        				    System.arraycopy(read_buf, offset, index_bytes, 0, experiment_script_data.INDEX_SIZE);
         				    index = ByteBuffer.wrap(index_bytes, 0, experiment_script_data.INDEX_SIZE).getInt();
-        				    System.arraycopy(read_buf, i*experiment_script_data.BUFFER_SIZE, set_data_bytes, 0, experiment_script_data.BUFFER_SIZE);
+        				    System.arraycopy(read_buf, offset, set_data_bytes, 0, experiment_script_data.BUFFER_SIZE);
         				    script.set_buffer(set_data_bytes);
         				
+        				    if (script.get_instruct_value() == experiment_script_data.INSTRUCT_FINISH)
+        				    	break;
+        				    
         				    position = index-1;
         				    refresh_script_list_view(position, script, item_string_view);
         				    list.add(position, item_string_view);
@@ -210,6 +219,65 @@ public class script_activity_list extends Activity {
         	}
 		});
     }
+	
+	public void add_default_experiment_script() {
+		int position = 0;
+		
+        for (int i = 1; i <= 9; i++) {
+        	HashMap<String, Object> item_string_view = new HashMap<String, Object>();
+            experiment_script_data new_item_data = new experiment_script_data();
+            position = list.size();
+            
+        	switch (i) {
+        	    case 1:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_SHAKER_ON);
+                break;
+                
+        	    case 2:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_SHAKER_SET_SPEED);
+                    new_item_data.set_shaker_speed_value(250);
+                break;
+                
+        	    case 3:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_SHAKER_SET_TEMPERATURE);
+                    new_item_data.set_shaker_temperature_value(25);
+                break;
+                
+        	    case 4:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_DELAY);
+                    new_item_data.set_delay_value(150);
+                break;
+                
+        	    case 5:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_SHAKER_SET_SPEED);
+                    new_item_data.set_shaker_speed_value(100);
+                break;
+                
+        	    case 6:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_DELAY);
+                    new_item_data.set_delay_value(30);
+                break;
+                
+        	    case 7:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_READ_SENSOR);
+                break;
+                
+        	    case 8:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_REPEAT_COUNT);
+                    new_item_data.set_repeat_from_value(2);
+                    new_item_data.set_repeat_count_value(10);   
+                break;
+                
+        	    case 9:
+                    new_item_data.set_instruct_value(experiment_script_data.INSTRUCT_SHAKER_OFF);
+                break;
+        	}
+        	
+            refresh_script_list_view(position, new_item_data, item_string_view);
+            list.add(position, item_string_view);
+            experiment_item.put(item_string_view, new_item_data);
+        }
+	}
 	
 	protected void add_new_instruct(int position, HashMap<Object, Object> item_data, List<HashMap<String,Object>> local_list) {
 		HashMap<String, Object> item_string_view = new HashMap<String, Object>();
@@ -358,35 +426,48 @@ public class script_activity_list extends Activity {
 	                item_string_view.put(key_repeat_count, "");
 	                item_string_view.put(key_repeat_time, "");
 	   	            item_string_view.put(key_shaker_argument, "");
+	   	            item_string_view.put(key_delay, "");
             break;
             
             case  experiment_script_data.INSTRUCT_REPEAT_COUNT:
-	                item_string_view.put(key_repeat_from, "from："+item_data.get_repeat_from_string()+"   ");
-	                item_string_view.put(key_repeat_count, "count："+item_data.get_repeat_count_string());
+	                item_string_view.put(key_repeat_from, "From："+item_data.get_repeat_from_string()+"   ");
+	                item_string_view.put(key_repeat_count, "Count："+item_data.get_repeat_count_string());
 	                item_string_view.put(key_repeat_time, "");
 	   	            item_string_view.put(key_shaker_argument, "");
+	   	            item_string_view.put(key_delay, "");
             break;
             
             case  experiment_script_data.INSTRUCT_REPEAT_TIME:
-	                item_string_view.put(key_repeat_from, "from："+item_data.get_repeat_from_string()+"   ");
+	                item_string_view.put(key_repeat_from, "From："+item_data.get_repeat_from_string()+"   ");
 	                item_string_view.put(key_repeat_count, "");
-	                item_string_view.put(key_repeat_time, "time："+item_data.get_repeat_time_string()+"min");
+	                item_string_view.put(key_repeat_time, "Time："+item_data.get_repeat_time_string()+"min");
 	   	            item_string_view.put(key_shaker_argument, "");
+	   	            item_string_view.put(key_delay, "");
             break;
             
             case  experiment_script_data.INSTRUCT_SHAKER_SET_SPEED:
 	                item_string_view.put(key_repeat_from, "");
 	                item_string_view.put(key_repeat_count, "");
 	                item_string_view.put(key_repeat_time, "");
-	   	            item_string_view.put(key_shaker_argument, "shaker speed：" + item_data.get_shaker_speed_string());
+	   	            item_string_view.put(key_shaker_argument, "Shaker speed：" + item_data.get_shaker_speed_string()+"rpm");
+	   	            item_string_view.put(key_delay, "");
             break;
             
             case  experiment_script_data.INSTRUCT_SHAKER_SET_TEMPERATURE:
 	                item_string_view.put(key_repeat_from, "");
 	                item_string_view.put(key_repeat_count, "");
 	                item_string_view.put(key_repeat_time, "");
-	   	            item_string_view.put(key_shaker_argument, "shaker temperature：" + item_data.get_shaker_temperature_string());
+	   	            item_string_view.put(key_shaker_argument, "shaker temperature：" + item_data.get_shaker_temperature_string() + "℃");
+	   	            item_string_view.put(key_delay, "");
             break;
+            
+            case  experiment_script_data.INSTRUCT_DELAY:
+                    item_string_view.put(key_repeat_from, "");
+                    item_string_view.put(key_repeat_count, "");
+                    item_string_view.put(key_repeat_time, "");
+   	                item_string_view.put(key_shaker_argument, "");
+   	                item_string_view.put(key_delay, "Time:" + item_data.get_delay_string()+"second");
+        break;
         }
 	}
 	

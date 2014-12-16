@@ -28,6 +28,8 @@ public class script_setting_activity extends Activity {
 	public EditText editText_repeat_time;
 	public EditText editText_shaker_temperature;
 	public EditText editText_shaker_speed;
+	public EditText editText_delay;
+	
 	public Spinner spinner_instruct;
 	public Spinner spinner_repeat_from;
 	experiment_script_data item_data;
@@ -50,6 +52,7 @@ public class script_setting_activity extends Activity {
 	    editText_repeat_time = (EditText) findViewById(R.id.editText_repeat_time);
 	    editText_shaker_temperature = (EditText) findViewById(R.id.editText_shaker_temperature);
 	    editText_shaker_speed = (EditText) findViewById(R.id.editText_shaker_speed);
+	    editText_delay = (EditText) findViewById(R.id.editText_delay);
 	    
 	    editText_repeat_count.addTextChangedListener(new TextWatcher() {
 	        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -159,6 +162,34 @@ public class script_setting_activity extends Activity {
 				
 			}
 	    });
+	    
+	    editText_delay.addTextChangedListener(new TextWatcher() {
+	        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+	        }
+
+	      
+	        public void afterTextChanged(Editable s) {
+		        try {
+		    	     int val = Integer.parseInt(s.toString());
+		    	     if(val > 255) {
+		    	        s.replace(0, s.length(), "255", 0, 3);
+		    	     } else if(val < 1) {
+		    	        s.replace(0, s.length(), "1", 0, 1);
+		    	     }
+		    	     item_data.set_delay_value(Integer.parseInt(s.toString()));
+		    	   } catch (NumberFormatException ex) {
+		    	      // Do something
+		    	   }
+		    }
+
+
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				// TODO Auto-generated method stub
+				
+			}
+	    });
 	  
 	    
 	    spinner_repeat_from = (Spinner)findViewById(R.id.spinner_repeat_from);
@@ -168,15 +199,15 @@ public class script_setting_activity extends Activity {
 	    
 	    for (int i = 0; i < total_item; i++) {
 	    	String str;
-	    	str = String.format("%d", i);
+	    	str = String.format("%d", i+1);
 	    	spinner_repeat_from_Adapter.add(str);
 	    	spinner_repeat_from_Adapter.notifyDataSetChanged();
 	    }
-	    spinner_repeat_from.setSelection(item_data.get_repeat_from_value());
+	    spinner_repeat_from.setSelection(item_data.get_repeat_from_value()-1);
 	    
 	    spinner_repeat_from.setOnItemSelectedListener(new OnItemSelectedListener() { 
 	        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-	        	item_data.set_repeat_from_value((byte)(0xff&position));
+	        	item_data.set_repeat_from_value(position+1);
 	        }
 	        
 	        public void onNothingSelected(AdapterView<?> parentView) {
@@ -212,31 +243,41 @@ public class script_setting_activity extends Activity {
 	    
 	    spinner_instruct.setOnItemSelectedListener(new OnItemSelectedListener() { 
 	        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-	        	Log.i(Tag, "select item: "+ id);
+	        	Log.i(Tag, "select item: "+ position);
 	        
-	        	spinner_repeat_from.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(0));
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(1) == false)
+	        	spinner_repeat_from.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(0));
+	  
+	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1) == false)
 	        		editText_repeat_count.setText("");
 	        	else
-	        		editText_repeat_count.setText(item_data.get_repeat_count_string());
-	        	editText_repeat_count.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(1));
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(2) == false)
+	        		editText_repeat_count.setText(item_data.get_repeat_count_string()); 	
+	        	editText_repeat_count.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1));
+	        	
+	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(2) == false)
 	        		editText_repeat_time.setText("");
 	        	else
-	        		editText_repeat_time.setText(item_data.get_repeat_time_string());
-	        	editText_repeat_time.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(2));
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(3) == false)
+	        		editText_repeat_time.setText(item_data.get_repeat_time_string());      	
+	        	editText_repeat_time.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(2));
+	        	
+	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(3) == false)
 	        		editText_shaker_temperature.setText("");
 	        	else
 	        		editText_shaker_temperature.setText(item_data.get_shaker_temperature_string());
-	        	editText_shaker_temperature.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(3));
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(4) == false)
+	        	editText_shaker_temperature.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(3));
+	        	
+	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(4) == false)
 	        		editText_shaker_speed.setText("");
 	        	else
 	        		editText_shaker_speed.setText(item_data.get_shaker_speed_string());
-	        	editText_shaker_speed.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get((int)id).get(4));
+	        	editText_shaker_speed.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(4));
 	        	
-	        	item_data.set_instruct_value((byte)(0xff&position));
+	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(5) == false)
+	        		editText_delay.setText("");
+	        	else
+	        		editText_delay.setText(item_data.get_delay_string());
+	        	editText_delay.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(5));
+	        	
+	        	item_data.set_instruct_value(position);
 	        }
 
 	        public void onNothingSelected(AdapterView<?> parentView) {

@@ -82,7 +82,8 @@ public class ODMonitorActivity extends Activity{
     public ImageButton button2; //Button led2;
     public ImageButton button3; //Button led3;
     public ImageButton button4; //Button led4;
-    public ImageButton button5; //Button led4;
+    public ImageButton button5;
+    public ImageButton button6;
     
     public ImageView led1;
     public ImageView led2;
@@ -113,7 +114,7 @@ public class ODMonitorActivity extends Activity{
     public void onCreate(Bundle savedInstanceState)
     {     
     	super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.od_monitor);
         Thread.currentThread().setName("Thread_ODMonitorActivity");
         
         usbmanager = (UsbManager) getSystemService(Context.USB_SERVICE);
@@ -156,9 +157,9 @@ public class ODMonitorActivity extends Activity{
         				led1.setImageResource(drawable.image0);		
         		}
         		
-        		file_operation write_file = new file_operation("Sensor", "sensor", true);
+        		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
         		try {
-        			write_file.delete_file(write_file.generate_filename());
+        			write_file.delete_file(write_file.generate_filename_no_date());
         		} catch (IOException e) {
         			// TODO Auto-generated catch block
         			e.printStackTrace();
@@ -186,9 +187,9 @@ public class ODMonitorActivity extends Activity{
         				led2.setImageResource(drawable.image0);		
         		}
         		
-        		file_operate_byte_array write_file = new file_operate_byte_array("GetExperimentData", "ExperimentData", true);
+        		file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
         		try {
-        			write_file.delete_file(write_file.generate_filename());
+        			write_file.delete_file(write_file.generate_filename_no_date());
         		} catch (IOException e) {
         			// TODO Auto-generated catch block
         			e.printStackTrace();
@@ -210,14 +211,13 @@ public class ODMonitorActivity extends Activity{
         		
         		ledPrevMap ^= 0x04;
         		
-        		if((ledPrevMap & 0x04) == 0x04){
+        		if((ledPrevMap & 0x04) == 0x04) {
         				led3.setImageResource(drawable.image100);
-        			}
-        			else{
+        		} else {
         				led3.setImageResource(drawable.image0);		
         		}
         		
-        		file_operate_byte_array read_file = new file_operate_byte_array("Script", "Script", true);
+        		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
 		    	try {
 		    		script_length = read_file.open_read_file(read_file.generate_filename_no_date());
 		    		
@@ -256,10 +256,6 @@ public class ODMonitorActivity extends Activity{
         				led4.setImageResource(drawable.image0);		
         		}
         		
-        		//byte[] data = new byte[1];
-        		//data[0] = ibutton;
-        		//WriteUsbCommand(android_accessory_packet.DATA_TYPE_KEYPAD, android_accessory_packet.STATUS_OK, data, 1);
-        		//reconnect_to_accessory();
         		show_chart_activity();
 			}
 		});  
@@ -268,6 +264,26 @@ public class ODMonitorActivity extends Activity{
         button5.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
         		show_script_activity();
+			}
+		});  
+        
+        button6 = (ImageButton) findViewById(R.id.Button6);
+        button6.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				file_operation read_file = new file_operation("od_sensor", "sensor_online", true);
+				try {
+					read_file.open_read_file(read_file.generate_filename_no_date());
+					String sensor_str = new String();
+					sensor_str = read_file.read_file();
+					
+					if (sensor_str != null) {
+						int[] data = new int[OD_calculate.experiment_data_size];
+				        OD_calculate.parse_raw_data(sensor_str, data);
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});  
         
@@ -443,17 +459,15 @@ public class ODMonitorActivity extends Activity{
 		if (accessory != null) {
 			if (usbmanager.hasPermission(accessory)) {
 				OpenAccessory(accessory);
-			} 
-			else
-			{
+			} else {
 				synchronized (mUsbReceiver) {
 					if (!mPermissionRequestPending) {
 						usbmanager.requestPermission(accessory,
 								mPermissionIntent);
 						mPermissionRequestPending = true;
 					}
-			}
-		}
+			    }
+		    }
 		} else {}
     }
         
@@ -579,20 +593,19 @@ public class ODMonitorActivity extends Activity{
 	}*/
 	
 	public void SensorData_Receive(android_accessory_packet rec) {
-		file_operation write_file = new file_operation("Sensor", "sensor", true);
+		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
 		byte[] byte_str = new byte[rec.get_Len_value()];
     	System.arraycopy(rec.buffer, rec.DATA_START, byte_str, 0, rec.get_Len_value());
     	String str = new String(byte_str);
     	shaker_return.setText(str);
     	try {
-    		write_file.create_file(write_file.generate_filename());
+    		write_file.create_file(write_file.generate_filename_no_date());
     		write_file.write_file(str);
     		write_file.flush_close_file();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 	
 	private void CloseAccessory() {
@@ -664,9 +677,9 @@ public class ODMonitorActivity extends Activity{
         		    	//   		handle_receive_data.get_Type_value(), handle_receive_data.get_Status_value(), handle_receive_data.get_Len_value());
         		    	//debug_view.setText(debug_str);
         		    	//String experiment_str = new String(experiment_data);
-        		    	file_operate_byte_array write_file = new file_operate_byte_array("GetExperimentData", "ExperimentData", true);
+        		    	file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
         		    	try {
-        		            write_file.create_file(write_file.generate_filename());
+        		            write_file.create_file(write_file.generate_filename_no_date());
         		    		write_file.write_file(experiment_data);
         		    		write_file.flush_close_file();
         				} catch (IOException e) {

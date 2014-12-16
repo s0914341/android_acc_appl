@@ -25,6 +25,8 @@ public class experiment_script_data implements Serializable{
 	public static final int  INSTRUCT_SHAKER_SET_SPEED = 4;
 	public static final int  INSTRUCT_REPEAT_COUNT = 5;
 	public static final int  INSTRUCT_REPEAT_TIME = 6;
+	public static final int  INSTRUCT_DELAY = 7;
+	public static final int  INSTRUCT_FINISH = 8;
 	
 	public static final int  INDEX_START = 0;
 	public static final int  INDEX_SIZE = 4;
@@ -45,6 +47,7 @@ public class experiment_script_data implements Serializable{
         aMap.put(INSTRUCT_SHAKER_SET_SPEED, "Shaker Set Speed");
         aMap.put(INSTRUCT_REPEAT_COUNT, "Repeat Count");
         aMap.put(INSTRUCT_REPEAT_TIME, "Repeat Time");
+        aMap.put(INSTRUCT_DELAY, "Delay");
         SCRIPT_INSTRUCT = Collections.unmodifiableMap(aMap);
     }
     
@@ -52,71 +55,88 @@ public class experiment_script_data implements Serializable{
     static {
        // Map<Integer, Boolean> aMap = new HashMap<Integer, Boolean>();
         List<SparseBooleanArray> list = new ArrayList<SparseBooleanArray>();
-        SparseBooleanArray read_sensor_enable = new SparseBooleanArray(5);
+        SparseBooleanArray read_sensor_enable = new SparseBooleanArray(6);
         read_sensor_enable.put(0, false);
         read_sensor_enable.put(1, false);
         read_sensor_enable.put(2, false);
         read_sensor_enable.put(3, false);
         read_sensor_enable.put(4, false);
+        read_sensor_enable.put(5, false);
         list.add(read_sensor_enable);
         
-        SparseBooleanArray shaker_on_enable = new SparseBooleanArray(5);
+        SparseBooleanArray shaker_on_enable = new SparseBooleanArray(6);
         shaker_on_enable.put(0, false);
         shaker_on_enable.put(1, false);
         shaker_on_enable.put(2, false);
         shaker_on_enable.put(3, false);
         shaker_on_enable.put(4, false);
+        shaker_on_enable.put(5, false);
         list.add(shaker_on_enable);
         
-        SparseBooleanArray shaker_off_enable = new SparseBooleanArray(5);
+        SparseBooleanArray shaker_off_enable = new SparseBooleanArray(6);
         shaker_off_enable.put(0, false);
         shaker_off_enable.put(1, false);
         shaker_off_enable.put(2, false);
         shaker_off_enable.put(3, false);
         shaker_off_enable.put(4, false);
+        shaker_off_enable.put(5, false);
         list.add(shaker_off_enable);
         
-        SparseBooleanArray shaker_set_temperature_enable = new SparseBooleanArray(5);
+        SparseBooleanArray shaker_set_temperature_enable = new SparseBooleanArray(6);
         shaker_set_temperature_enable.put(0, false);
         shaker_set_temperature_enable.put(1, false);
         shaker_set_temperature_enable.put(2, false);
         shaker_set_temperature_enable.put(3, true);
         shaker_set_temperature_enable.put(4, false);
+        shaker_set_temperature_enable.put(5, false);
         list.add(shaker_set_temperature_enable);
         
-        SparseBooleanArray shaker_set_speed_enable = new SparseBooleanArray(5);
+        SparseBooleanArray shaker_set_speed_enable = new SparseBooleanArray(6);
         shaker_set_speed_enable.put(0, false);
         shaker_set_speed_enable.put(1, false);
         shaker_set_speed_enable.put(2, false);
         shaker_set_speed_enable.put(3, false);
         shaker_set_speed_enable.put(4, true);
+        shaker_set_speed_enable.put(5, false);
         list.add(shaker_set_speed_enable);
         
-        SparseBooleanArray repeat_count_enable = new SparseBooleanArray(5);
+        SparseBooleanArray repeat_count_enable = new SparseBooleanArray(6);
         repeat_count_enable.put(0, true);
         repeat_count_enable.put(1, true);
         repeat_count_enable.put(2, false);
         repeat_count_enable.put(3, false);
         repeat_count_enable.put(4, false);
+        repeat_count_enable.put(5, false);
         list.add(repeat_count_enable);
         
-        SparseBooleanArray repeat_time_enable = new SparseBooleanArray(5);
+        SparseBooleanArray repeat_time_enable = new SparseBooleanArray(6);
         repeat_time_enable.put(0, true);
         repeat_time_enable.put(1, false);
         repeat_time_enable.put(2, true);
         repeat_time_enable.put(3, false);
         repeat_time_enable.put(4, false);
+        repeat_time_enable.put(5, false);
         list.add(repeat_time_enable);
+        
+        SparseBooleanArray delay_enable = new SparseBooleanArray(6);
+        delay_enable.put(0, false);
+        delay_enable.put(1, false);
+        delay_enable.put(2, false);
+        delay_enable.put(3, false);
+        delay_enable.put(4, false);
+        delay_enable.put(5, true);
+        list.add(delay_enable);
         
         SCRIPT_SETTING_ENABLE_LIST = Collections.unmodifiableList(list);
     }
     
     private int instruct = INSTRUCT_READ_SENSOR;
-    private int repeat_from = 0;
+    private int repeat_from = 1;
     private int repeat_count = 1;
     private int repeat_time = 1;
     private int shaker_temperature = 25;
     private int shaker_speed = 20;
+    private int delay = 10;
     
     public void set_instruct_value(int data) {
 	    instruct = data;
@@ -200,6 +220,20 @@ public class experiment_script_data implements Serializable{
 		return str;
 	}
     
+    public void set_delay_value(int data) {
+    	delay = data;
+	}
+    
+    public int get_delay_value() {
+		return delay;
+	}
+    
+    public String get_delay_string() {
+    	String str;
+    	str = String.format("%d", get_delay_value());
+		return str;
+	}
+    
     public byte[] get_buffer() {
     	byte[] buffer = new byte[BUFFER_SIZE];
     	Arrays.fill(buffer, (byte)0);
@@ -231,6 +265,14 @@ public class experiment_script_data implements Serializable{
         		System.arraycopy(repeat_from_bytes, 0, buffer, ARGUMENT2_START, ARGUMENT2_SIZE);
     	    	System.arraycopy(repeat_time_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
         	} break;
+        	
+        	case INSTRUCT_DELAY:
+    	    	byte[] delay_bytes = ByteBuffer.allocate(4).putInt(delay).array();
+    	    	System.arraycopy(delay_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
+    	    break;
+    	    
+    	    default:
+    	    break;
     	}
     	
     	return buffer;
@@ -276,6 +318,15 @@ public class experiment_script_data implements Serializable{
     	    	    System.arraycopy(buffer, ARGUMENT2_START, repeat_from_bytes, 0, ARGUMENT2_SIZE);
     	            repeat_from = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE).getInt();
         	    } break;
+        	    
+        	    case INSTRUCT_DELAY:
+    	        	byte[] delay_bytes = new byte[ARGUMENT1_SIZE];
+    	    	    System.arraycopy(buffer, ARGUMENT1_START, delay_bytes, 0, ARGUMENT1_SIZE);
+    	            delay = ByteBuffer.wrap(delay_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	        break;
+    	        
+    	        default:
+    	        break;
     	    }
     		
 		    ret = 0;

@@ -61,7 +61,7 @@
             	android:layout_toRightOf="@+id/textViewButton2" 
             	android:layout_alignTop="@+id/textViewButton2" 
             	android:layout_alignBottom="@+id/textViewButton2"
-            	android:text="Set Script"
+            	android:text="Send Script"
             	android:layout_marginLeft="42dp"
             	android:textStyle="bold">
             </TextView>
@@ -188,6 +188,18 @@
             		android:adjustViewBounds="false" 
             		android:layout_toRightOf="@+id/Button4"            		
             		android:layout_alignTop="@+id/Button4"
+            		android:scaleType="fitCenter"
+            		android:layout_marginLeft="62dp">
+            </ImageButton> 
+            
+           	<ImageButton 
+            		android:background="@drawable/buttons" 
+            		android:layout_width="65dp" 
+            		android:id="@+id/Button6" 
+            		android:layout_height="65dp"
+            		android:adjustViewBounds="false" 
+            		android:layout_toRightOf="@+id/Button5"            		
+            		android:layout_alignTop="@+id/Button5"
             		android:scaleType="fitCenter"
             		android:layout_marginLeft="62dp">
             </ImageButton> 
