@@ -10,12 +10,12 @@
     android:padding="5dp" >
 
     <RelativeLayout 
-        	android:layout_height="220dp" 
+        	android:layout_height="160dp" 
         	android:id="@+id/relativeLayout1" 
         	android:layout_width="fill_parent" 
         	android:background="@drawable/border2">
         	
-        	<TextView 
+        	<!-- <TextView 
             	android:id="@+id/textView1" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
             	android:layout_width="wrap_content" 
@@ -26,7 +26,7 @@
             	android:layout_marginTop="20dp"
             	android:singleLine="true"
             	android:textStyle="bold">
-            </TextView>
+            </TextView> -->
         	
         	<TextView 
             	android:id="@+id/textViewButton1" 
@@ -36,7 +36,7 @@
             	android:layout_alignParentLeft="true" 
             	android:text="Start"
             	android:layout_marginLeft="55dp"
-            	android:layout_marginTop="110dp"
+            	android:layout_marginTop="20dp"
             	android:textStyle="bold">
             </TextView>
             
@@ -47,9 +47,9 @@
             	android:layout_height="wrap_content" 
             	android:layout_toRightOf="@+id/textViewButton1" 
             	android:layout_alignTop="@+id/textViewButton1" 
+            	android:layout_alignLeft="@+id/Button2"
             	android:layout_alignBottom="@+id/textViewButton1"
             	android:text="Get Data"
-            	android:layout_marginLeft="52dp"
             	android:textStyle="bold">
             </TextView>
             
@@ -59,10 +59,10 @@
             	android:layout_width="wrap_content" 
             	android:layout_height="wrap_content" 
             	android:layout_toRightOf="@+id/textViewButton2" 
+            	android:layout_alignLeft="@+id/Button3"
             	android:layout_alignTop="@+id/textViewButton2" 
             	android:layout_alignBottom="@+id/textViewButton2"
             	android:text="Send Script"
-            	android:layout_marginLeft="42dp"
             	android:textStyle="bold">
             </TextView>
             
@@ -72,34 +72,34 @@
             	android:layout_width="wrap_content" 
             	android:layout_height="wrap_content" 
             	android:layout_toRightOf="@+id/textViewButton3" 
+            	android:layout_alignLeft="@+id/Button4"
             	android:layout_alignTop="@+id/textViewButton3" 
             	android:layout_alignBottom="@+id/textViewButton3"
             	android:text="Chart"
-            	android:layout_marginLeft="42dp"
             	android:textStyle="bold">
             </TextView>
             
-            <ImageView  
+            <!-- <ImageView  
             	android:src="@drawable/image0" 
             	android:id="@+id/LED1"
             	android:layout_width="50dp"
             	android:layout_height="50dp" 
             	android:layout_marginTop="45dp"
             	android:layout_marginLeft="42dp">
-            </ImageView>
+            </ImageView> -->
             
             <ImageButton 
+                android:background="@drawable/buttons_start" 
             	android:scaleType="fitCenter" 
-            	android:layout_width="65dp" 
-            	android:layout_height="65dp" 
+            	android:layout_width="80dp" 
+            	android:layout_height="80dp" 
             	android:id="@+id/Button1" 
-            	android:background="@drawable/buttons" 
             	android:adjustViewBounds="false" 
-            	android:layout_marginTop="140dp"
+            	android:layout_marginTop="50dp"
             	android:layout_marginLeft="42dp" android:focusable="true">
             </ImageButton>
             
-            <ImageView 
+            <!-- <ImageView 
             	android:layout_width="450dp" 
             	android:layout_height="wrap_content" 
             	android:background="#FFFFFFFF"
@@ -107,9 +107,9 @@
             	android:layout_marginTop="110dp"
             	android:layout_marginLeft="20dp" 
             	android:id="@+id/line">
-            </ImageView>
+            </ImageView> -->
             
-            <ImageView 
+            <!-- <ImageView 
             	android:layout_width="50dp" 
             	android:src="@drawable/image0" 
             	android:id="@+id/LED2" 
@@ -119,20 +119,21 @@
             	android:layout_alignBottom="@+id/LED1"
             	android:layout_centerVertical="true"
             	android:layout_marginLeft="62dp">
-            </ImageView>
+            </ImageView> -->
             
-            <ImageButton android:layout_width="65dp" 
+            <ImageButton
            	 		android:background="@drawable/buttons_get_data" 
            	 		android:id="@+id/Button2" 
-           	 		android:layout_height="65dp" 
+           	 		android:layout_height="80dp" 
+           	 		android:layout_width="80dp"
            	 		android:scaleType="fitCenter" 
             		android:adjustViewBounds="false"
-            		android:layout_alignLeft="@+id/LED2"   	 		
+            		android:layout_marginLeft="30dp"   	 		
            	 		android:layout_toRightOf="@+id/Button1" 
            	 		android:layout_alignTop="@+id/Button1">
            	 </ImageButton>
             
-            <ImageView 
+            <!-- <ImageView 
             	android:layout_width="50dp" 
             	android:src="@drawable/image0" 
             	android:id="@+id/LED3" 
@@ -142,21 +143,21 @@
             	android:layout_alignBottom="@+id/LED2"
             	android:layout_centerVertical="true"
             	android:layout_marginLeft="62dp">
-            </ImageView>
+            </ImageView> -->
             
            	<ImageButton 
             		android:background="@drawable/buttons_send_script" 
-            		android:layout_width="65dp" 
+            		android:layout_width="80dp" 
             		android:id="@+id/Button3" 
-            		android:layout_height="65dp"
+            		android:layout_height="80dp"
             		android:adjustViewBounds="false" 
             		android:layout_toRightOf="@+id/Button2"            		
             		android:layout_alignTop="@+id/Button2"
             		android:scaleType="fitCenter" 
-            		android:layout_alignLeft="@+id/LED3">
+            		android:layout_marginLeft="30dp">
             </ImageButton>           
             
-            <ImageView 
+            <!-- <ImageView 
             	android:layout_width="50dp" 
             	android:src="@drawable/image0" 
             	android:id="@+id/LED4" 
@@ -166,30 +167,30 @@
             	android:layout_alignBottom="@+id/LED3"
             	android:layout_centerVertical="true"
             	android:layout_marginLeft="62dp">
-            </ImageView>
+            </ImageView> -->
             
            	<ImageButton 
             		android:background="@drawable/buttons_chart" 
-            		android:layout_width="65dp" 
+            		android:layout_width="80dp" 
             		android:id="@+id/Button4" 
-            		android:layout_height="65dp"
+            		android:layout_height="80dp"
             		android:adjustViewBounds="false" 
             		android:layout_toRightOf="@+id/Button3"            		
             		android:layout_alignTop="@+id/Button3"
             		android:scaleType="fitCenter" 
-            		android:layout_alignLeft="@+id/LED4">
+            		android:layout_marginLeft="30dp">
             </ImageButton> 
             
            	<ImageButton 
-            		android:background="@drawable/buttons" 
-            		android:layout_width="65dp" 
+            		android:background="@drawable/buttons_script" 
+            		android:layout_width="80dp" 
             		android:id="@+id/Button5" 
-            		android:layout_height="65dp"
+            		android:layout_height="80dp"
             		android:adjustViewBounds="false" 
             		android:layout_toRightOf="@+id/Button4"            		
             		android:layout_alignTop="@+id/Button4"
             		android:scaleType="fitCenter"
-            		android:layout_marginLeft="62dp">
+            		android:layout_marginLeft="30dp">
             </ImageButton> 
             
            	<ImageButton 
@@ -201,7 +202,7 @@
             		android:layout_toRightOf="@+id/Button5"            		
             		android:layout_alignTop="@+id/Button5"
             		android:scaleType="fitCenter"
-            		android:layout_marginLeft="62dp">
+            		android:layout_marginLeft="30dp">
             </ImageButton> 
             
         </RelativeLayout>          

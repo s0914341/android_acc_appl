@@ -136,6 +136,7 @@ public class file_operation {
 	
 	public int open_read_file(String filename) throws IOException {
 		int ret = -1;
+		
 		if (sdcard.exists()) {
 			if (!file_MetaData.exists()) {
 		        file_MetaData.mkdirs();
@@ -145,6 +146,7 @@ public class file_operation {
 			if (file_MetaData.exists()) {
 			    file = new File(file_MetaData, filename);
 			    file_buf_read = new BufferedReader(new FileReader(file));
+			    ret = 0;
 		    } else {
 		    	file_buf_read = null;
 				Log.d(Tag, "Can't open read file");

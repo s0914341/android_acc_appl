@@ -31,6 +31,7 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
 import ODMonitor.App.ODMonitorActivity;
+import ODMonitor.App.OD_calculate;
 import ODMonitor.App.R;
 import ODMonitor.App.data.android_accessory_packet;
 import ODMonitor.App.data.chart_display_data;
@@ -57,7 +58,7 @@ public class XYChartBuilder extends Activity {
   /** The main renderer that includes all the renderers customizing a chart. */
   private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
   /** The most recently added series. */
-  private TimeSeries mCurrentSeries;
+  private TimeSeries mCurrentSeries = null;
   /** The most recently created renderer, customizing the current series. */
   private XYSeriesRenderer mCurrentRenderer;
   /** The chart view that displays the data. */
@@ -117,8 +118,8 @@ public class XYChartBuilder extends Activity {
       mRenderer.setPointSize(5);
     
       init_time_series();
-      data_read_thread = new data_read_thread(handler);
-      data_read_thread.start();
+    //  data_read_thread = new data_read_thread(handler);
+    //  data_read_thread.start();
   }
   
   public void refresh_current_view_range(Date x, double y) {
@@ -218,7 +219,7 @@ public class XYChartBuilder extends Activity {
 		}
 	}
   
-  public void init_time_series() {
+  /*public void init_time_series() {
 	  int file_len = 0;
 	  Date date = null;
 	  long ms = 0;
@@ -260,7 +261,63 @@ public class XYChartBuilder extends Activity {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
-  }
+  }*/
+  
+    public void init_time_series() {
+        int file_len = 0;
+        Date date = null;
+        long ms = 0;
+        double od_value = 0;
+        
+   
+		file_operation read_file = new file_operation("od_sensor", "sensor_online", true);
+        try {
+	        read_file.open_read_file(read_file.generate_filename_no_date());
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	        read_file = new file_operation("od_sensor", "sensor_offline", true);
+	        try {
+				read_file.open_read_file(read_file.generate_filename_no_date());
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        }
+        
+        try {    	
+	        String sensor_str = new String();
+	        sensor_str = read_file.read_file();
+	        while (sensor_str != null) {
+				int[] data = null;
+		        data = OD_calculate.parse_raw_data(sensor_str);
+		        if (data != null) {
+		            int[] channel_data = new int[OD_calculate.total_sensor_channel];
+		            System.arraycopy(data, OD_calculate.sensor_ch1_index, channel_data, 0, OD_calculate.total_sensor_channel);
+		            od_value = OD_calculate.calculate_od(channel_data);
+		            date = new Date(data[OD_calculate.year_index], data[OD_calculate.month_index], data[OD_calculate.day_index], 
+		            		data[OD_calculate.hour_index], data[OD_calculate.minute_index], data[OD_calculate.second_index]);
+		            
+		            if (mCurrentSeries == null) {
+		            	mRenderer.setRange(new double[] {date.getTime(), date.getTime()+20000, 0, 50});
+	  			        CreateNewSeries();
+		            }
+		            
+		            current_index = (long)data[OD_calculate.index_index];
+	    	        mCurrentSeries.add(date, od_value);
+		        } else {
+		        	Log.e(Tag, "parse raw data fail");
+		        }
+		        
+		        sensor_str = read_file.read_file();
+			} 
+	        
+	        refresh_current_view_range(date, od_value);     
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+    }
   
   public void CreateNewSeries() {
       String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);

@@ -4,7 +4,9 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -125,10 +127,10 @@ public class ODMonitorActivity extends Activity{
         Log.d(Tag, "filter" +filter);
         registerReceiver(mUsbReceiver, filter);
         
-        led1 = (ImageView) findViewById(R.id.LED1);
+        /*led1 = (ImageView) findViewById(R.id.LED1);
 		led2 = (ImageView) findViewById(R.id.LED2);
 		led3 = (ImageView) findViewById(R.id.LED3);
-		led4 = (ImageView) findViewById(R.id.LED4);
+		led4 = (ImageView) findViewById(R.id.LED4);*/
 		
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
@@ -148,14 +150,14 @@ public class ODMonitorActivity extends Activity{
         		byte ibutton = 0x01;
         		Log.d("EXPERIMENT", "START EXPERIMENT");
         		
-        		ledPrevMap ^= 0x01;
+        	/*	ledPrevMap ^= 0x01;
         		
         		if((ledPrevMap & 0x01) == 0x01){
         				led1.setImageResource(drawable.image100);
         			}
         			else{
         				led1.setImageResource(drawable.image0);		
-        		}
+        		}*/
         		
         		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
         		try {
@@ -164,9 +166,11 @@ public class ODMonitorActivity extends Activity{
         			// TODO Auto-generated catch block
         			e.printStackTrace();
         		}
-        		byte[] data = new byte[1];
+        		byte[] data = new byte[9];
         		data[0] = android_accessory_packet.STATUS_EXPERIMENT_START;
-        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS, android_accessory_packet.STATUS_OK, data, 1);
+        		byte[] start_time_bytes = ByteBuffer.allocate(8).putLong(new Date().getTime()).array();
+        		System.arraycopy(start_time_bytes, 0, data, 1, 8);
+        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS, android_accessory_packet.STATUS_OK, data, 9);
         	}
 		});
         
@@ -178,14 +182,14 @@ public class ODMonitorActivity extends Activity{
         		byte ibutton = 0x02;
         		//v.bringToFront();
         		
-        		ledPrevMap ^= 0x02;
+        	/*	ledPrevMap ^= 0x02;
         		
         		if((ledPrevMap & 0x02) == 0x02){
         				led2.setImageResource(drawable.image100);
         			}
         			else{
         				led2.setImageResource(drawable.image0);		
-        		}
+        		}*/
         		
         		file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
         		try {
@@ -209,13 +213,13 @@ public class ODMonitorActivity extends Activity{
         		byte ibutton = 0x04;
         		//v.bringToFront();
         		
-        		ledPrevMap ^= 0x04;
+        	/*	ledPrevMap ^= 0x04;
         		
         		if((ledPrevMap & 0x04) == 0x04) {
         				led3.setImageResource(drawable.image100);
         		} else {
         				led3.setImageResource(drawable.image0);		
-        		}
+        		}*/
         		
         		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
 		    	try {
@@ -247,14 +251,14 @@ public class ODMonitorActivity extends Activity{
 			{
         		byte ibutton = 0x08;
         		//v.bringToFront();
-        		ledPrevMap ^= 0x08;
+        		/*ledPrevMap ^= 0x08;
         		
         		if((ledPrevMap & 0x08) == 0x08){
         				led4.setImageResource(drawable.image100);
         			}
         			else{
         				led4.setImageResource(drawable.image0);		
-        		}
+        		}*/
         		
         		show_chart_activity();
 			}
@@ -277,8 +281,8 @@ public class ODMonitorActivity extends Activity{
 					sensor_str = read_file.read_file();
 					
 					if (sensor_str != null) {
-						int[] data = new int[OD_calculate.experiment_data_size];
-				        OD_calculate.parse_raw_data(sensor_str, data);
+						int[] data = null;
+				        data = OD_calculate.parse_raw_data(sensor_str);
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block

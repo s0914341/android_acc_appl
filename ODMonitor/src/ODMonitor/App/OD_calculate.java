@@ -50,18 +50,25 @@ public class OD_calculate {
 		return ODvalue;
 	}
 	
-	public static void parse_raw_data(String s, int[] data) {
+	public static int[] parse_raw_data(String s) {
 		//Pattern p = Pattern.compile("(\\d+)/(\\d+)/(\\d+) (\\d+):(\\d+):(\\d+)  index: (\\d+), (\\d+), (\\d+), (\\d+), (\\d+), (\\d+), (\\d+), (\\d+), (\\d+)");
 		Pattern p = Pattern.compile("\\d+");
 		Matcher m = p.matcher(s);
+		int[] data = new int[experiment_data_size];
 		
-		for (int i = 0; i < data.length; i++) {
-			if (m.find())
+		for (int i = 0; i < experiment_data_size; i++) {
+			if (m.find()) {
 				data[i] = Integer.parseInt(m.group());
+			} else {
+			    data = null;
+			    break;
+			}
 		}
+		
+		return data;
 	}
 	
-	public static double calculate_od(int[] data, double[] upscale_raw_data, double[] channels_od) {
+	public static double calculate_od(int[] data) {
 		int ret = -1;
 		double channel_ratio = 0;
 		boolean ratio_check_ok = false;
@@ -72,6 +79,8 @@ public class OD_calculate {
 		int channel_count = 0;
 		double primitive_od = 0;
 		double final_od = 0;
+		double[] upscale_raw_data = new double[total_sensor_channel];
+		double[] channels_od = new double[total_sensor_channel];
 		
 		
         if (data.length == total_sensor_channel) {
@@ -80,7 +89,7 @@ public class OD_calculate {
         		raw_data = data[channel_index];
         	    if ((channel_index > 0) && channel_index < total_sensor_channel) {
         		    if (data[channel_index-1] > 0) {
-        	            channel_ratio = ((double)data[channel_index]/(double)data[channel_index-1])/Adjecency_Channel_Ratio[channel_index-2];
+        	            channel_ratio = ((double)data[channel_index]/(double)data[channel_index-1])/Adjecency_Channel_Ratio[channel_index-1];
         	            if (channel_ratio > 0.9 && channel_ratio < 1.11) {
         	            	if ((max_val/data[channel_index]) > 1.5) {
         	        	        ratio_check_ok = true;
@@ -105,7 +114,7 @@ public class OD_calculate {
         	    }
         	    
         	    if ((raw_data < 4010) && (raw_data > 80) && (ratio_check_ok == true)) 
-        	    	upscale_raw_data[channel_index] = raw_data * Upscale_factors[channel_index - 1];
+        	    	upscale_raw_data[channel_index] = raw_data * Upscale_factors[channel_index];
         	    else
         	    	upscale_raw_data[channel_index] = 0;
         	    
