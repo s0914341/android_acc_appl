@@ -93,7 +93,10 @@ public class ODMonitorActivity extends Activity{
     public ImageView led4;
     public ImageView ledvolume;
     
-    public ImageView led_connect_status;
+    public ImageView connect_status;
+    public ImageView mass_storage_status;
+    public ImageView sensor_status;
+    public ImageView shaker_status;
     
     public EditText etInput; //shaker command input
     public TextView shaker_return;
@@ -124,6 +127,7 @@ public class ODMonitorActivity extends Activity{
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
+        filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
         Log.d(Tag, "filter" +filter);
         registerReceiver(mUsbReceiver, filter);
         
@@ -134,8 +138,14 @@ public class ODMonitorActivity extends Activity{
 		
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
-		led_connect_status = (ImageView)findViewById(R.id.ConnectStatus);
-		
+		connect_status = (ImageView)findViewById(R.id.ConnectStatus);
+		connect_status.setEnabled(false);
+		mass_storage_status = (ImageView)findViewById(R.id.MassStorageStatus);
+		mass_storage_status.setEnabled(false);
+		sensor_status = (ImageView)findViewById(R.id.SensorStatus);
+		sensor_status.setEnabled(false);
+		shaker_status = (ImageView)findViewById(R.id.ShakerStatus);
+		shaker_status.setEnabled(false);
 		//data_write_thread = new data_write_thread(handler);
 		//data_write_thread.start();
 	//	textView2 = (TextView) findViewById(R.id.test);
@@ -431,6 +441,8 @@ public class ODMonitorActivity extends Activity{
         ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() { //按"是",則退出應用程式
             public void onClick(DialogInterface dialog, int i) {
             	CloseAccessory();
+            	unregisterReceiver(mUsbReceiver);
+            	System.exit(0);
             	//LEDActivity.this.finish();//關閉activity
             }
         });
@@ -514,7 +526,7 @@ public class ODMonitorActivity extends Activity{
 		
 		handlerThread = new handler_thread(handler, inputstream);
 		handlerThread.start();
-		led_connect_status.setImageResource(drawable.image100);
+		connect_status.setEnabled(true);
 		
 	} /*end OpenAccessory*/
 	
@@ -629,15 +641,15 @@ public class ODMonitorActivity extends Activity{
 		} catch(IOException e){}
 		
 		/*FIXME, add the notfication also to close the application*/
-		unregisterReceiver(mUsbReceiver);
+		//unregisterReceiver(mUsbReceiver);
 		//CloseAccessory();
 		//super.onDestroy();
 		filedescriptor = null;
 		inputstream = null;
 		outputstream = null;
-		led_connect_status.setImageResource(drawable.image0);
+		connect_status.setEnabled(false);
 		
-		System.exit(0);
+		//System.exit(0);
 	}
 		
 	

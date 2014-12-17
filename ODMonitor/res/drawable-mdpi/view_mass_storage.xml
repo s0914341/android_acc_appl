@@ -15,8 +15,8 @@
     <item
          android:drawable="@drawable/button" /> -->
      
-     
-     <item android:state_pressed="true"
-           android:drawable="@drawable/button_send_script_press" />
-     <item android:drawable="@drawable/button_send_script" />
+     <item android:state_enabled="true"
+           android:drawable="@drawable/mass_storage_enable" />
+     <item android:state_enabled="false"
+           android:drawable="@drawable/mass_storage_disable" />
  </selector>
