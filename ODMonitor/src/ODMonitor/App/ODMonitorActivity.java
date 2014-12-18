@@ -139,13 +139,13 @@ public class ODMonitorActivity extends Activity{
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
 		connect_status = (ImageView)findViewById(R.id.ConnectStatus);
-		connect_status.setEnabled(false);
+		connect_status.setEnabled(true);
 		mass_storage_status = (ImageView)findViewById(R.id.MassStorageStatus);
-		mass_storage_status.setEnabled(false);
+		mass_storage_status.setEnabled(true);
 		sensor_status = (ImageView)findViewById(R.id.SensorStatus);
-		sensor_status.setEnabled(false);
+		sensor_status.setEnabled(true);
 		shaker_status = (ImageView)findViewById(R.id.ShakerStatus);
-		shaker_status.setEnabled(false);
+		shaker_status.setEnabled(true);
 		//data_write_thread = new data_write_thread(handler);
 		//data_write_thread.start();
 	//	textView2 = (TextView) findViewById(R.id.test);

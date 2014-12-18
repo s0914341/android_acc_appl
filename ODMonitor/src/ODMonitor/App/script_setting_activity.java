@@ -36,6 +36,8 @@ public class script_setting_activity extends Activity {
 	public int total_item = 0;
 	public long item_id = 0;
 	public int item_position = 0;
+	public ArrayAdapter<String> spinner_repeat_from_Adapter;
+	public ArrayAdapter<String> spinner_instruct_Adapter;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -191,19 +193,19 @@ public class script_setting_activity extends Activity {
 			}
 	    });
 	  
-	    
 	    spinner_repeat_from = (Spinner)findViewById(R.id.spinner_repeat_from);
-	    ArrayAdapter<String> spinner_repeat_from_Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
-	    spinner_repeat_from_Adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-	    spinner_repeat_from.setAdapter(spinner_repeat_from_Adapter);
-	    
-	    for (int i = 0; i < total_item; i++) {
-	    	String str;
-	    	str = String.format("%d", i+1);
-	    	spinner_repeat_from_Adapter.add(str);
-	    	spinner_repeat_from_Adapter.notifyDataSetChanged();
+        spinner_repeat_from_Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
+        spinner_repeat_from_Adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner_repeat_from.setAdapter(spinner_repeat_from_Adapter);
+	    if ((item_data.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_COUNT) || (item_data.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_TIME)) {
+	        for (int i = 0; i < item_position; i++) {
+	    	    String str;
+	    	    str = String.format("%d", i+1);
+	    	    spinner_repeat_from_Adapter.add(str);
+	    	    spinner_repeat_from_Adapter.notifyDataSetChanged();
+	        }
+	        spinner_repeat_from.setSelection(item_data.get_repeat_from_value()-1);
 	    }
-	    spinner_repeat_from.setSelection(item_data.get_repeat_from_value()-1);
 	    
 	    spinner_repeat_from.setOnItemSelectedListener(new OnItemSelectedListener() { 
 	        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
@@ -230,23 +232,47 @@ public class script_setting_activity extends Activity {
 		});
 	    
 	    spinner_instruct = (Spinner)findViewById(R.id.spinner_instruct);
-	    ArrayAdapter<String> spinner_instruct_Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
+	   // ArrayAdapter<String> spinner_instruct_Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
+	    spinner_instruct_Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
 	    spinner_instruct_Adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    spinner_instruct.setAdapter(spinner_instruct_Adapter);
 	    
 	    int size = experiment_script_data.SCRIPT_INSTRUCT.size();
 	    for (int i = 0; i < size; i++) {
+	    	if (item_position == 0) {
+	    		if ((i == experiment_script_data.INSTRUCT_REPEAT_COUNT) || (i == experiment_script_data.INSTRUCT_REPEAT_TIME)) { 
+	    			continue;
+	    		}
+	    	}
 	    	spinner_instruct_Adapter.add(experiment_script_data.SCRIPT_INSTRUCT.get(i));
-	    	spinner_instruct_Adapter.notifyDataSetChanged();
 	    }
+	    spinner_instruct_Adapter.notifyDataSetChanged();
 	    spinner_instruct.setSelection(item_data.get_instruct_value());
 	    
 	    spinner_instruct.setOnItemSelectedListener(new OnItemSelectedListener() { 
 	        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
 	        	Log.i(Tag, "select item: "+ position);
-	        
+	            
+	        	for (int i = 0; i < experiment_script_data.SCRIPT_INSTRUCT.size(); i++) {
+	        		String s = experiment_script_data.SCRIPT_INSTRUCT.get(i);
+	        		if (s.equals(spinner_instruct_Adapter.getItem(position))) {
+	        			position = i;
+	        			break;
+	        		}
+	        	}
+	        	      	
 	        	spinner_repeat_from.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(0));
-	  
+	        	spinner_repeat_from_Adapter.clear();
+	        	if ((position == experiment_script_data.INSTRUCT_REPEAT_COUNT) || (position == experiment_script_data.INSTRUCT_REPEAT_TIME)) { 
+	        	    for (int i = 0; i < item_position; i++) {
+		    	        String str;
+		    	        str = String.format("%d", i+1);
+		    	        spinner_repeat_from_Adapter.add(str);
+		    	        spinner_repeat_from_Adapter.notifyDataSetChanged();
+		            }
+	        	    spinner_repeat_from.setSelection(item_data.get_repeat_from_value()-1);
+	        	} 
+	        	
 	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1) == false)
 	        		editText_repeat_count.setText("");
 	        	else

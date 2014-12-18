@@ -5,6 +5,7 @@ import android.util.SparseBooleanArray;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -238,38 +239,57 @@ public class experiment_script_data implements Serializable{
     	byte[] buffer = new byte[BUFFER_SIZE];
     	Arrays.fill(buffer, (byte)0);
     	
-    	byte[] instruct_bytes = ByteBuffer.allocate(4).putInt(instruct).array();
-    	System.arraycopy(instruct_bytes, 0, buffer, INSTRUCT_START, INSTRUCT_SIZE);
+    	{
+    	    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    	    byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    	
+    	    byte[] instruct_bytes = byteBuffer.putInt(instruct).array();
+    	    System.arraycopy(instruct_bytes, 0, buffer, INSTRUCT_START, INSTRUCT_SIZE);
+    	}
  
     	switch (instruct) {
-    	    case INSTRUCT_SHAKER_SET_TEMPERATURE:
-    	    	byte[] shaker_temperature_bytes = ByteBuffer.allocate(4).putInt(shaker_temperature).array();
+    	    case INSTRUCT_SHAKER_SET_TEMPERATURE: { 
+    	    	ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    	    	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    	    	byte[] shaker_temperature_bytes = byteBuffer.putInt(shaker_temperature).array();
     	    	System.arraycopy(shaker_temperature_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
-    	    break;
+    	    } break;
     	    
-    	    case INSTRUCT_SHAKER_SET_SPEED:
-    	    	byte[] shaker_speed_bytes = ByteBuffer.allocate(4).putInt(shaker_speed).array();
+    	    case INSTRUCT_SHAKER_SET_SPEED: {
+    	    	ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    	    	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    	    	byte[] shaker_speed_bytes = byteBuffer.putInt(shaker_speed).array();
     	    	System.arraycopy(shaker_speed_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
-    	    break;
+    	    } break;
     	    
     	    case INSTRUCT_REPEAT_COUNT: {
-    	    	byte[] repeat_from_bytes = ByteBuffer.allocate(4).putInt(repeat_from).array();
-    	    	byte[] repeat_count_bytes = ByteBuffer.allocate(4).putInt(repeat_count).array();
+    	    	ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    	    	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    	    	byte[] repeat_from_bytes = byteBuffer.putInt(repeat_from).array();
+    	    	byteBuffer = ByteBuffer.allocate(4);
+    	    	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    	    	byte[] repeat_count_bytes = byteBuffer.putInt(repeat_count).array();
     	    	System.arraycopy(repeat_from_bytes, 0, buffer, ARGUMENT2_START, ARGUMENT2_SIZE);
     	    	System.arraycopy(repeat_count_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
     	    } break;
         	    
         	case INSTRUCT_REPEAT_TIME: {
-        		byte[] repeat_from_bytes = ByteBuffer.allocate(4).putInt(repeat_from).array();
-        		byte[] repeat_time_bytes = ByteBuffer.allocate(4).putInt(repeat_time).array();
+        		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+            	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        		byte[] repeat_from_bytes = byteBuffer.putInt(repeat_from).array();
+        		byteBuffer = ByteBuffer.allocate(4);
+        		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        		byte[] repeat_time_bytes = byteBuffer.putInt(repeat_time).array();
         		System.arraycopy(repeat_from_bytes, 0, buffer, ARGUMENT2_START, ARGUMENT2_SIZE);
     	    	System.arraycopy(repeat_time_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
         	} break;
         	
-        	case INSTRUCT_DELAY:
-    	    	byte[] delay_bytes = ByteBuffer.allocate(4).putInt(delay).array();
+        	case INSTRUCT_DELAY: {
+        		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+            	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    	    	byte[] delay_bytes = byteBuffer.putInt(delay).array();
     	    	System.arraycopy(delay_bytes, 0, buffer, ARGUMENT1_START, ARGUMENT1_SIZE);
-    	    break;
+        	} break;
     	    
     	    default:
     	    break;
@@ -284,45 +304,61 @@ public class experiment_script_data implements Serializable{
         
     	if (buffer.length == BUFFER_SIZE) {
     		System.arraycopy(buffer, INSTRUCT_START, instruct_bytes, 0, INSTRUCT_SIZE);
-            instruct = ByteBuffer.wrap(instruct_bytes, 0, INSTRUCT_SIZE).getInt();
+    		ByteBuffer byte_buffer = ByteBuffer.wrap(instruct_bytes, 0, INSTRUCT_SIZE);
+    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+            instruct = byte_buffer.getInt();
             
     		switch (instruct) {
     	        case INSTRUCT_SHAKER_SET_TEMPERATURE:
     	    	    byte[] shaker_temperature_bytes = new byte[ARGUMENT1_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT1_START, shaker_temperature_bytes, 0, ARGUMENT1_SIZE);
-    	            shaker_temperature = ByteBuffer.wrap(shaker_temperature_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(shaker_temperature_bytes, 0, ARGUMENT1_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            shaker_temperature = byte_buffer.getInt();
     	        break;
     	    
     	        case INSTRUCT_SHAKER_SET_SPEED:
     	        	byte[] shaker_speed_bytes = new byte[ARGUMENT1_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT1_START, shaker_speed_bytes, 0, ARGUMENT1_SIZE);
-    	            shaker_speed = ByteBuffer.wrap(shaker_speed_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(shaker_speed_bytes, 0, ARGUMENT1_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            shaker_speed = byte_buffer.getInt();
     	        break;
     	    
     	        case INSTRUCT_REPEAT_COUNT: {
     	        	byte[] repeat_count_bytes = new byte[ARGUMENT1_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT1_START, repeat_count_bytes, 0, ARGUMENT1_SIZE);
-    	            repeat_count = ByteBuffer.wrap(repeat_count_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(repeat_count_bytes, 0, ARGUMENT1_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            repeat_count = byte_buffer.getInt();
     	            
     	            byte[] repeat_from_bytes = new byte[ARGUMENT2_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT2_START, repeat_from_bytes, 0, ARGUMENT2_SIZE);
-    	            repeat_from = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            repeat_from = byte_buffer.getInt();
     	        } break;
         	    
         	    case INSTRUCT_REPEAT_TIME: {
         	    	byte[] repeat_time_bytes = new byte[ARGUMENT1_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT1_START, repeat_time_bytes, 0, ARGUMENT1_SIZE);
-    	            repeat_time = ByteBuffer.wrap(repeat_time_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(repeat_time_bytes, 0, ARGUMENT1_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            repeat_time = byte_buffer.getInt();
     	            
     	            byte[] repeat_from_bytes = new byte[ARGUMENT2_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT2_START, repeat_from_bytes, 0, ARGUMENT2_SIZE);
-    	            repeat_from = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(repeat_from_bytes, 0, ARGUMENT2_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            repeat_from = byte_buffer.getInt();
         	    } break;
         	    
         	    case INSTRUCT_DELAY:
     	        	byte[] delay_bytes = new byte[ARGUMENT1_SIZE];
     	    	    System.arraycopy(buffer, ARGUMENT1_START, delay_bytes, 0, ARGUMENT1_SIZE);
-    	            delay = ByteBuffer.wrap(delay_bytes, 0, ARGUMENT1_SIZE).getInt();
+    	    	    byte_buffer = ByteBuffer.wrap(delay_bytes, 0, ARGUMENT1_SIZE);
+    	    		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+    	            delay = byte_buffer.getInt();
     	        break;
     	        
     	        default:

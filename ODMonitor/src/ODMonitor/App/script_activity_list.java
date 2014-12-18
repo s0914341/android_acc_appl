@@ -2,6 +2,7 @@ package ODMonitor.App;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -142,26 +143,37 @@ public class script_activity_list extends Activity {
         			write_file.create_file(write_file.generate_filename_no_date());
         			byte[] header = new byte[5];
         			int total_instruction_number = list.size();
-        			byte[] total_instruction_number_bytes = ByteBuffer.allocate(4).putInt(total_instruction_number).array();
-    	        	System.arraycopy(total_instruction_number_bytes, 0, header, 1, 4);
-        			header[0] = SCRIPT_HEADER;
+        			{
+        			    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        	    	    byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        	    	
+        			    byte[] total_instruction_number_bytes = byteBuffer.putInt(total_instruction_number).array();
+    	        	    System.arraycopy(total_instruction_number_bytes, 0, header, 1, 4);
+        			    header[0] = SCRIPT_HEADER;
+        			}
 
         			write_file.write_file(header);
         			for (int i = 0; i < total_instruction_number; i++) {
         				 experiment_script_data temp;
-        					
+        				 ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+         	    	     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+         	    	
         			     temp = (experiment_script_data)experiment_item.get(list.get(i));
         			     byte[] buffer = temp.get_buffer();
-        			     byte[] index_bytes = ByteBuffer.allocate(4).putInt(i+1).array();
+        			     byte[] index_bytes = byteBuffer.putInt(i+1).array();
         	        	 System.arraycopy(index_bytes, 0, buffer, experiment_script_data.INDEX_START, experiment_script_data.INDEX_SIZE);
         			     write_file.write_file(buffer);
         			}
         			experiment_script_data final_instruct = new experiment_script_data();
         			final_instruct.set_instruct_value(experiment_script_data.INSTRUCT_FINISH);
-        			byte[] buffer = final_instruct.get_buffer();
-   			        byte[] index_bytes = ByteBuffer.allocate(4).putInt(total_instruction_number+1).array();
-   	        	    System.arraycopy(index_bytes, 0, buffer, experiment_script_data.INDEX_START, experiment_script_data.INDEX_SIZE);
-   			        write_file.write_file(buffer);
+        			{
+        				 ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        	    	     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        			     byte[] buffer = final_instruct.get_buffer();
+   			             byte[] index_bytes = byteBuffer.putInt(total_instruction_number+1).array();
+   	        	         System.arraycopy(index_bytes, 0, buffer, experiment_script_data.INDEX_START, experiment_script_data.INDEX_SIZE);
+   	        	         write_file.write_file(buffer);
+        			}
         	
 		            write_file.flush_close_file();
 		            Toast.makeText(script_activity_list.this, "Save Script Success", Toast.LENGTH_SHORT).show(); 
@@ -196,7 +208,10 @@ public class script_activity_list extends Activity {
         				    HashMap<String, Object> item_string_view = new HashMap<String, Object>();
         				 
         				    System.arraycopy(read_buf, offset, index_bytes, 0, experiment_script_data.INDEX_SIZE);
-        				    index = ByteBuffer.wrap(index_bytes, 0, experiment_script_data.INDEX_SIZE).getInt();
+
+        				    ByteBuffer buffer = ByteBuffer.wrap(index_bytes, 0, experiment_script_data.INDEX_SIZE);
+        				    buffer.order(ByteOrder.LITTLE_ENDIAN);
+        				    index = buffer.getInt();
         				    System.arraycopy(read_buf, offset, set_data_bytes, 0, experiment_script_data.BUFFER_SIZE);
         				    script.set_buffer(set_data_bytes);
         				
@@ -219,6 +234,21 @@ public class script_activity_list extends Activity {
         	}
 		});
     }
+	
+	public void check_script_recursive() {
+		int total_instruction_number = list.size();
+		
+		while(total_instruction_number > 0) {
+			 experiment_script_data temp;
+			 total_instruction_number--;
+			 
+		     temp = (experiment_script_data)experiment_item.get(list.get(total_instruction_number));
+		     if ((temp.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_COUNT) || 
+		    	(temp.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_TIME)) {
+		    	 
+		     }
+		}
+	}
 	
 	public void add_default_experiment_script() {
 		int position = 0;
