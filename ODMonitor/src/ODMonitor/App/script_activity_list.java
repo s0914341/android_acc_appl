@@ -5,9 +5,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.achartengine.chartdemo.demo.chart.IDemoChart;
 import org.achartengine.chartdemo.demo.chart.XYChartBuilder;
@@ -19,13 +22,20 @@ import ODMonitor.App.file.file_operate_byte_array;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -66,6 +76,7 @@ public class script_activity_list extends Activity {
 	Button button_clear_all;
 	Button button_save_script;
 	Button button_load_script;
+	SwipeDismissListViewTouchListener touchListener;
 	
 	private static final int[] mPics=new int[]{
         R.drawable.sensor_read,R.drawable.on,R.drawable.off, R.drawable.shaker_temperature,R.drawable.shaker_speed,
@@ -73,6 +84,25 @@ public class script_activity_list extends Activity {
     };
 	
 	/** Called when the activity is first created. */
+	
+	class long_press_task extends TimerTask {
+		int position; 
+		Point cur_Point; 
+		Point st_Point;
+		
+		public long_press_task(int position1, Point currentPoint, Point start_Point) {
+			position = position1;
+			cur_Point = currentPoint;
+			st_Point = start_Point;
+	    }
+		
+        @Override
+        public void run() {
+        	Log.d(Tag, "long_press_task position = " + position);
+        		
+        }
+   };
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
@@ -96,7 +126,31 @@ public class script_activity_list extends Activity {
 	    //啟用按鍵過濾功能，這兩行都會進行過濾
 	    list_view.setTextFilterEnabled(true);
 	   // getListView().setTextFilterEnabled(true);
+	   
 	    registerForContextMenu(list_view);
+	    
+	    
+	    touchListener = new SwipeDismissListViewTouchListener(
+	    		        		  list_view,
+	    		                  new SwipeDismissListViewTouchListener.DismissCallbacks() {
+	    		                      public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+	    		                          for (int position : reverseSortedPositions) {
+	    		                        	 delete_instruct(position, experiment_item, list);
+	    		                        	 Log.i(Tag, "onDismiss position:"+position);
+	    		                          }
+	    		                          adapter.notifyDataSetChanged();
+	    		                      }
+
+									  public boolean canDismiss(int position) {
+										// TODO Auto-generated method stub
+										Log.i(Tag, "canDismiss");
+										return true;
+									  }
+	    		                  });
+	    
+	   
+	    list_view.setOnTouchListener(touchListener);
+	    list_view.setOnScrollListener(touchListener.makeScrollListener());
 	    
 	    list_view.setOnItemClickListener(new OnItemClickListener() {
 	    	 
@@ -104,10 +158,10 @@ public class script_activity_list extends Activity {
 	                int position, long id) {
 	            Log.d(Tag, "ListViewItem id = " + id);
 	            Log.d(Tag, "ListViewItem position= " + position);
-	            show_script_setting_dialog(id, position);
+	            if (touchListener.isDismissing() == false)
+	                show_script_setting_dialog(id, position);
 	        }
 	    });
-	    
 	    
 	    button_add_item = (Button) findViewById(R.id.button_add);
 	    button_add_item.setOnClickListener(new View.OnClickListener() {
@@ -309,6 +363,12 @@ public class script_activity_list extends Activity {
         }
 	}
 	
+	protected void delete_instruct(int position, HashMap<Object, Object> item_data, List<HashMap<String,Object>> local_list) {
+		item_data.remove(local_list.get(position));
+		local_list.remove(position);
+    	refresh_experiment_script_index(position, item_data, local_list);
+	}
+	
 	protected void add_new_instruct(int position, HashMap<Object, Object> item_data, List<HashMap<String,Object>> local_list) {
 		HashMap<String, Object> item_string_view = new HashMap<String, Object>();
         experiment_script_data new_item_data = new experiment_script_data();
@@ -334,6 +394,7 @@ public class script_activity_list extends Activity {
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
 	    if (v.getId()==R.id.listView1) {
 	        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 	        menu.setHeaderTitle("Edit");
@@ -361,9 +422,7 @@ public class script_activity_list extends Activity {
 	        break;
 	        
 	        case DELETE:
-	        	experiment_item.remove(list.get(position));
-	        	list.remove(position);
-	        	refresh_experiment_script_index(position, experiment_item, list);
+	        	delete_instruct(position, experiment_item, list);
                 adapter.notifyDataSetChanged();
             break;
             
@@ -443,9 +502,11 @@ public class script_activity_list extends Activity {
         str_index = String.format("%d", index+1);
         int instruct = item_data.get_instruct_value();
         
+        Log.d(Tag, "instruct:"+ item_data.get_instruct_string());
         /* avoid item_string_view object is the same for HashMap, need let item_string_view has a key value always different */
         item_string_view.put(key_experiment, item_data);
         item_string_view.put(key_picture, mPics[instruct]);
+        Log.d(Tag, "instruct:"+ instruct);
         item_string_view.put(key_index, str_index);
         item_string_view.put(key_instruction, experiment_script_data.SCRIPT_INSTRUCT.get(instruct));
         switch(instruct) {
