@@ -50,6 +50,9 @@ public class script_setting_activity extends Activity {
 	    item_id = intent.getLongExtra("send_item_id", 0);
 	    item_position = intent.getIntExtra("send_item_position", 0);
 	    
+	    String title_string = String.format("Script Setting: %d", item_position+1);
+	    setTitle(title_string);
+	    
 	    editText_repeat_count = (EditText) findViewById(R.id.editText_repeat_count);
 	    editText_repeat_time = (EditText) findViewById(R.id.editText_repeat_time);
 	    editText_shaker_temperature = (EditText) findViewById(R.id.editText_shaker_temperature);
@@ -248,61 +251,13 @@ public class script_setting_activity extends Activity {
 	    }
 	    spinner_instruct_Adapter.notifyDataSetChanged();
 	    spinner_instruct.setSelection(item_data.get_instruct_value());
-	    
+	    refresh_UI_object_enable(item_data.get_instruct_string());
+
 	    spinner_instruct.setOnItemSelectedListener(new OnItemSelectedListener() { 
 	        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
 	        	Log.i(Tag, "select item: "+ position);
-	            
-	        	for (int i = 0; i < experiment_script_data.SCRIPT_INSTRUCT.size(); i++) {
-	        		String s = experiment_script_data.SCRIPT_INSTRUCT.get(i);
-	        		if (s.equals(spinner_instruct_Adapter.getItem(position))) {
-	        			position = i;
-	        			break;
-	        		}
-	        	}
 	        	      	
-	        	spinner_repeat_from.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(0));
-	        	spinner_repeat_from_Adapter.clear();
-	        	if ((position == experiment_script_data.INSTRUCT_REPEAT_COUNT) || (position == experiment_script_data.INSTRUCT_REPEAT_TIME)) { 
-	        	    for (int i = 0; i < item_position; i++) {
-		    	        String str;
-		    	        str = String.format("%d", i+1);
-		    	        spinner_repeat_from_Adapter.add(str);
-		    	        spinner_repeat_from_Adapter.notifyDataSetChanged();
-		            }
-	        	    spinner_repeat_from.setSelection(item_data.get_repeat_from_value()-1);
-	        	} 
-	        	
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1) == false)
-	        		editText_repeat_count.setText("");
-	        	else
-	        		editText_repeat_count.setText(item_data.get_repeat_count_string()); 	
-	        	editText_repeat_count.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1));
-	        	
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(2) == false)
-	        		editText_repeat_time.setText("");
-	        	else
-	        		editText_repeat_time.setText(item_data.get_repeat_time_string());      	
-	        	editText_repeat_time.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(2));
-	        	
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(3) == false)
-	        		editText_shaker_temperature.setText("");
-	        	else
-	        		editText_shaker_temperature.setText(item_data.get_shaker_temperature_string());
-	        	editText_shaker_temperature.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(3));
-	        	
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(4) == false)
-	        		editText_shaker_speed.setText("");
-	        	else
-	        		editText_shaker_speed.setText(item_data.get_shaker_speed_string());
-	        	editText_shaker_speed.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(4));
-	        	
-	        	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(5) == false)
-	        		editText_delay.setText("");
-	        	else
-	        		editText_delay.setText(item_data.get_delay_string());
-	        	editText_delay.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(5));
-	        	
+	        	refresh_UI_object_enable(spinner_instruct_Adapter.getItem(position));
 	        	item_data.set_instruct_value(position);
 	        }
 
@@ -310,6 +265,60 @@ public class script_setting_activity extends Activity {
 	            // your code here
 	        }
 	    });
+	}
+	
+	public void refresh_UI_object_enable(String instruct_str) {
+		int position = 0;
+		
+		for (int i = 0; i < experiment_script_data.SCRIPT_INSTRUCT.size(); i++) {
+    		String s = experiment_script_data.SCRIPT_INSTRUCT.get(i);
+    		if (s.equals(instruct_str)) {
+    			position = i;
+    			break;
+    		}
+    	}
+		
+    	spinner_repeat_from.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(0));
+    	spinner_repeat_from_Adapter.clear();
+    	if ((position == experiment_script_data.INSTRUCT_REPEAT_COUNT) || (position == experiment_script_data.INSTRUCT_REPEAT_TIME)) { 
+    	    for (int i = 0; i < item_position; i++) {
+    	        String str;
+    	        str = String.format("%d", i+1);
+    	        spinner_repeat_from_Adapter.add(str);
+    	        spinner_repeat_from_Adapter.notifyDataSetChanged();
+            }
+    	    spinner_repeat_from.setSelection(item_data.get_repeat_from_value()-1);
+    	} 
+    	
+    	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1) == false)
+    		editText_repeat_count.setText("");
+    	else
+    		editText_repeat_count.setText(item_data.get_repeat_count_string()); 	
+    	editText_repeat_count.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(1));
+    	
+    	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(2) == false)
+    		editText_repeat_time.setText("");
+    	else
+    		editText_repeat_time.setText(item_data.get_repeat_time_string());      	
+    	editText_repeat_time.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(2));
+    	
+    	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(3) == false)
+    		editText_shaker_temperature.setText("");
+    	else
+    		editText_shaker_temperature.setText(item_data.get_shaker_temperature_string());
+    	editText_shaker_temperature.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(3));
+    	
+    	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(4) == false)
+    		editText_shaker_speed.setText("");
+    	else
+    		editText_shaker_speed.setText(item_data.get_shaker_speed_string());
+    	editText_shaker_speed.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(4));
+    	
+    	if (experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(5) == false)
+    		editText_delay.setText("");
+    	else
+    		editText_delay.setText(item_data.get_delay_string());
+    	editText_delay.setEnabled(experiment_script_data.SCRIPT_SETTING_ENABLE_LIST.get(position).get(5));
 	}
 	
 	public void save_experiment_script() throws NumberFormatException{	

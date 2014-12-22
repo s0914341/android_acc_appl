@@ -3,9 +3,9 @@
     <string name="hello">Hello World, LEDActivity!</string>
     <string name="app_name">FTDI Demo</string>
     <string name="submit">Send</string>
-    <string name="script_add_item">add item</string>
-    <string name="script_clear_all">clear all</string>
-    <string name="script_save_script">save script</string>
-    <string name="script_load_script">load script</string>
+    <string name="script_add_item">Add Instruction</string>
+    <string name="script_clear_all">Clear All</string>
+    <string name="script_save_script">Save Script</string>
+    <string name="script_load_script">Load Script</string>
     <string name="link"><a href="http://www.maestrogen.com/ftp/i-track/user_manual.html">iTrack User Manual</a></string>
 </resources>

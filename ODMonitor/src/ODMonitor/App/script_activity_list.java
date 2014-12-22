@@ -158,7 +158,7 @@ public class script_activity_list extends Activity {
 	                int position, long id) {
 	            Log.d(Tag, "ListViewItem id = " + id);
 	            Log.d(Tag, "ListViewItem position= " + position);
-	            if (touchListener.isDismissing() == false)
+	          //  if (touchListener.isDismissing() == false)
 	                show_script_setting_dialog(id, position);
 	        }
 	    });
@@ -191,6 +191,12 @@ public class script_activity_list extends Activity {
 	    button_save_script = (Button) findViewById(R.id.button_save);
 	    button_save_script.setOnClickListener(new View.OnClickListener() {
         	public void onClick(View v) {
+        		/* check repeat instruction of script if is over 3 recursive level */
+        		if (3 <= check_script_recursive()) {
+        			 Toast.makeText(script_activity_list.this, "repeat recursive over 3 level", Toast.LENGTH_SHORT).show(); 
+        			 return;
+        		}
+        		
         		file_operate_byte_array write_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
         		try {
         			write_file.delete_file(write_file.generate_filename_no_date());
@@ -289,19 +295,43 @@ public class script_activity_list extends Activity {
 		});
     }
 	
-	public void check_script_recursive() {
-		int total_instruction_number = list.size();
+	public int check_script_recursive() {
+		int start_instruction_number = list.size();
+		int recursive_level = 0;
+		List<int[]> list_repeat = new ArrayList<int[]>();
 		
-		while(total_instruction_number > 0) {
-			 experiment_script_data temp;
-			 total_instruction_number--;
-			 
-		     temp = (experiment_script_data)experiment_item.get(list.get(total_instruction_number));
-		     if ((temp.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_COUNT) || 
-		    	(temp.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_TIME)) {
-		    	 
-		     }
+		while((start_instruction_number--) > 0) {
+            experiment_script_data temp;
+	        temp = (experiment_script_data)experiment_item.get(list.get(start_instruction_number));
+		    if ((temp.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_COUNT) || 
+		        (temp.get_instruct_value() == experiment_script_data.INSTRUCT_REPEAT_TIME)) {
+		    	int[] repeat= new int[2];
+		    	repeat[0] = start_instruction_number;
+		    	repeat[1] = temp.get_repeat_from_value();
+		    	list_repeat.add(repeat);
+		    }	
 		}
+		
+		for (int i = 0; i < list_repeat.size(); i++) {
+			int[] recursive_range = list_repeat.get(i); 
+			recursive_level = 1;
+			for (int j = i+1; j < list_repeat.size(); j++) {
+				int[] temp_recursive = list_repeat.get(j);
+				
+				if ((temp_recursive[0] < recursive_range[0]) && (temp_recursive[0] > recursive_range[1])) {
+					if (temp_recursive[1] > recursive_range[1])
+						recursive_range[1] = temp_recursive[1];
+					
+					recursive_level++;
+				}
+				
+				if ((recursive_level) > 3)
+					return recursive_level;
+			}
+			
+		}
+		
+		return recursive_level;
 	}
 	
 	public void add_default_experiment_script() {
@@ -382,11 +412,13 @@ public class script_activity_list extends Activity {
 		Log.d(Tag, "refresh_experiment_script_index size = " + item_data.size()); 
         for(int i = position; i < local_list.size(); i++) {
 	        experiment_script_data temp;
+	        HashMap<String, Object> item_string_view = local_list.get(i);
 	
-	        temp = (experiment_script_data)item_data.get(local_list.get(i));
-	        item_data.remove(local_list.get(i));
-	        refresh_script_list_view(i, temp, local_list.get(i));
-	        if (null == item_data.put(local_list.get(i), temp))
+	        temp = (experiment_script_data)item_data.get(item_string_view);
+	        item_data.remove(item_string_view);
+	        refresh_script_list_view(i, temp, item_string_view);
+	        Log.d(Tag, "refresh_experiment_script index: " + i + "string:"+item_string_view.get(key_instruction)); 
+	        if (null == item_data.put(item_string_view, temp))
 	        	 Log.d(Tag, "refresh_experiment_script_index index = " + i);
         }	
         Log.d(Tag, "refresh_experiment_script_index size = " + item_data.size()); 

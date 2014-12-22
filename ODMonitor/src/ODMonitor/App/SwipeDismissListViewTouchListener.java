@@ -20,6 +20,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -67,6 +68,7 @@ import java.util.List;
  */
 public class SwipeDismissListViewTouchListener implements View.OnTouchListener  {
     // Cached ViewConfiguration and system-wide constant values
+	public String Tag = "SwipeDismissListViewTouchListener";
     private int mSlop;
     private int mMinFlingVelocity;
     private int mMaxFlingVelocity;
@@ -178,6 +180,9 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener  
 
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: {
+            	if (mDismissAnimationRefCount != 0)
+            		return true;
+            	
                 if (mPaused) {
                     return false;
                 }
@@ -216,6 +221,9 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener  
             }
 
             case MotionEvent.ACTION_UP: {
+            	if (mDismissAnimationRefCount != 0)
+            		return true;
+            	
                 if (mVelocityTracker == null) {
                     break;
                 }
@@ -313,6 +321,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener  
 
     private void dismiss(final View view, final int position, boolean dismissRight) {
         ++mDismissAnimationRefCount;
+        
         if (view == null) {
             // No view, shortcut to calling onDismiss to let it deal with adapter
             // updates and all that.
@@ -321,15 +330,15 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener  
         }
 
         view.animate()
-                .translationX(dismissRight ? mViewWidth : -mViewWidth)
-                .alpha(0)
-                .setDuration(mAnimationTime)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        performDismiss(view, position);
-                    }
-                });
+        .translationX(dismissRight ? mViewWidth : -mViewWidth)
+        .alpha(0)
+        .setDuration(mAnimationTime)
+        .setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                performDismiss(view, position);
+            }
+        });
     }
 
     private View getViewForPosition(int position) {
