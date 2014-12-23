@@ -23,6 +23,7 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import ODMonitor.App.R.drawable;
 import ODMonitor.App.data.android_accessory_packet;
 import ODMonitor.App.data.chart_display_data;
+import ODMonitor.App.data.machine_information;
 import ODMonitor.App.file.file_operate_byte_array;
 import ODMonitor.App.file.file_operation;
 import android.app.Activity;
@@ -63,7 +64,7 @@ import android.widget.Toast;
 
 public class ODMonitorActivity extends Activity{
 	public String Tag = "ODMonitorActivity";
-	private static final String ACTION_USB_PERMISSION = "FTDI.LED.USB_PERMISSION";
+	private static final String ACTION_USB_PERMISSION = "OD.MONITOR.USB_PERMISSION";
 	public UsbManager usbmanager;
 	public UsbAccessory usbaccessory;
 	public PendingIntent mPermissionIntent;
@@ -87,10 +88,6 @@ public class ODMonitorActivity extends Activity{
     public ImageButton button5;
     public ImageButton button6;
     
-    public ImageView led1;
-    public ImageView led2;
-    public ImageView led3;
-    public ImageView led4;
     public ImageView ledvolume;
     
     public ImageView connect_status;
@@ -127,14 +124,9 @@ public class ODMonitorActivity extends Activity{
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-        filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
+        //filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
         Log.d(Tag, "filter" +filter);
         registerReceiver(mUsbReceiver, filter);
-        
-        /*led1 = (ImageView) findViewById(R.id.LED1);
-		led2 = (ImageView) findViewById(R.id.LED2);
-		led3 = (ImageView) findViewById(R.id.LED3);
-		led4 = (ImageView) findViewById(R.id.LED4);*/
 		
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
@@ -314,85 +306,15 @@ public class ODMonitorActivity extends Activity{
             } 
            return false; 
          } 
-         }); 
-       
- /*
-        volumecontrol = (SeekBar)findViewById(R.id.seekBar1);
-  
-        //set the max value to 50
-        volumecontrol.setMax(50);
+         });
         
-        volumecontrol.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() 
-        {		
-			public void onStopTrackingTouch(SeekBar seekBar)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-			
-			public void onStartTrackingTouch(SeekBar seekBar)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-			
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) 
-			{
-				int len = 1;
-				byte[] data = new byte[1];
-				data[0] = (byte)progress;
-				
-				acc_pkg_transfer.copy_to_data(data, len);
-				acc_pkg_transfer.set_Type((byte)1);
-				acc_pkg_transfer.set_Len((byte)1);
-				
-				try{
-					if(outputstream != null){
-						outputstream.write(acc_pkg_transfer.buffer, 0,  len + acc_pkg_transfer.get_header_size());
-					}
-				}
-				catch (IOException e) {}		
-				
-				ledvolume = (ImageView) findViewById(R.id.LEDvolume);
-				if(progress == 0)
-				{
-					ledvolume.setImageResource(drawable.image0);
-				}
-				else if(progress > 0 && (int)progress < 11)
-				{
-					ledvolume.setImageResource(drawable.image10);
-				}
-				else if (progress > 10 && progress < 21)
-				{
-					ledvolume.setImageResource(drawable.image20);
-				}
-				else if (progress > 20 && progress < 36)
-				{
-					ledvolume.setImageResource(drawable.image35);
-				}
-				else if (progress > 35 && progress < 51)
-				{
-					ledvolume.setImageResource(drawable.image50);
-				}
-				else if (progress > 50 && progress < 66)
-				{
-					ledvolume.setImageResource(drawable.image65);
-				}
-				else if (progress > 65 && progress < 76)
-				{
-					ledvolume.setImageResource(drawable.image75);
-				}
-				else if (progress > 75 && progress < 91)
-				{
-					ledvolume.setImageResource(drawable.image90);
-				}
-				else
-				{
-					ledvolume.setImageResource(drawable.image100);
-				}
-			}
-        });
-        */
+        Log.d ( Tag, this.getIntent().getAction());
+    }
+    
+    public void get_machine_information() {
+		byte[] data = new byte[1];
+		data[0] = 0;
+		WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS, android_accessory_packet.STATUS_OK, data, 0);
     }
     
     public void show_chart_activity() {
@@ -474,13 +396,14 @@ public class ODMonitorActivity extends Activity{
 		UsbAccessory accessory = (accessories == null ? null : accessories[0]);
 		if (accessory != null) {
 			if (usbmanager.hasPermission(accessory)) {
+				Log.d ( Tag, "hasPermission");
 				OpenAccessory(accessory);
 			} else {
 				synchronized (mUsbReceiver) {
 					if (!mPermissionRequestPending) {
-						usbmanager.requestPermission(accessory,
-								mPermissionIntent);
+						usbmanager.requestPermission(accessory, mPermissionIntent);
 						mPermissionRequestPending = true;
+						Log.d ( Tag, "requestPermission");
 					}
 			    }
 		    }
@@ -520,6 +443,7 @@ public class ODMonitorActivity extends Activity{
 			outputstream = new FileOutputStream(fd);
 			/*check if any of them are null*/
 			if(inputstream == null || outputstream==null){
+				Log.d(Tag, "inputstream null");
 				return;
 			}
 		}
@@ -528,85 +452,9 @@ public class ODMonitorActivity extends Activity{
 		handlerThread.start();
 		connect_status.setEnabled(true);
 		
+		get_machine_information();
+		
 	} /*end OpenAccessory*/
-	
-	public void KeypadLed_Receive(byte[] data)
-	{
-		/*
-		led1 = (ImageView) findViewById(R.id.LED1);
-		led2 = (ImageView) findViewById(R.id.LED2);
-		led3 = (ImageView) findViewById(R.id.LED3);
-		led4 = (ImageView) findViewById(R.id.LED4);
-		*/
-		ledPrevMap ^= data[3];
-		data[3] = ledPrevMap;
-		
-		if((data[3]& 0x01) == 0x01)
-		{
-			led1.setImageResource(drawable.image100);
-		}
-		else{
-			led1.setImageResource(drawable.image0);		
-		}
-		
-		if((data[3]& 0x02) == 0x02){
-			led2.setImageResource(drawable.image100);
-		}else{
-			led2.setImageResource(drawable.image0);
-		}
-		
-		if((data[3]& 0x04) == 0x04){
-			led3.setImageResource(drawable.image100);
-		}else{
-			led3.setImageResource(drawable.image0);
-		}
-		
-		if((data[3]& 0x08) == 0x08){
-			led4.setImageResource(drawable.image100);
-		}else{
-			led4.setImageResource(drawable.image0);
-		}
-	}
-	
-	/*public void Slider_Receive(byte[] data) {
-		ledvolume = (ImageView) findViewById(R.id.LEDvolume);
-		if((int)data[3] == 0)
-		{
-			ledvolume.setImageResource(drawable.image0);
-		}
-		else if((int)data[3] > 0 && (int)data[3] < 11)
-		{
-			ledvolume.setImageResource(drawable.image10);
-		}
-		else if ((int)data[3] > 10 && (int)data[3] < 21)
-		{
-			ledvolume.setImageResource(drawable.image20);
-		}
-		else if ((int)data[3] > 20 && (int)data[3] < 36)
-		{
-			ledvolume.setImageResource(drawable.image35);
-		}
-		else if ((int)data[3] > 35 && (int)data[3] < 51)
-		{
-			ledvolume.setImageResource(drawable.image50);
-		}
-		else if ((int)data[3] > 50 && (int)data[3] < 66)
-		{
-			ledvolume.setImageResource(drawable.image65);
-		}
-		else if ((int)data[3] > 65 && (int)data[3] < 76)
-		{
-			ledvolume.setImageResource(drawable.image75);
-		}
-		else if ((int)data[3] > 75 && (int)data[3] < 91)
-		{
-			ledvolume.setImageResource(drawable.image90);
-		}
-		else
-		{
-			ledvolume.setImageResource(drawable.image100);
-		}
-	}*/
 	
 	public void SensorData_Receive(android_accessory_packet rec) {
 		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
@@ -660,28 +508,28 @@ public class ODMonitorActivity extends Activity{
     		android_accessory_packet handle_receive_data = new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE);
     		byte[] recv = b.getByteArray(android_accessory_packet.key_receive);
     		
-    		handle_receive_data.copy_to_buffer(recv, handle_receive_data.get_size());
+    		handle_receive_data.copy_to_buffer(recv, android_accessory_packet.get_size());
     		
     		switch (handle_receive_data.get_Type_value()) {
-    		    case android_accessory_packet.DATA_TYPE_KEYPAD:
-		    	    KeypadLed_Receive(handle_receive_data.buffer);
-    		    break;
-    		    
-    		    case android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS:
-    		    	//Slider_Receive(handle_receive_data.buffer);
-        		break;
+    		    case android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS: {
+    		    	machine_information info = new machine_information();
+    		    	info.copy_to_buffer(handle_receive_data.get_data(0, machine_information.TOTAL_SIZE), machine_information.TOTAL_SIZE);
+    		    	
+    		    	String str = String.format("time: %d version: %c.%c%c%c", info.get_experiment_time(), info.get_version1(), info.get_version2(), info.get_version3(), info.get_version4());
+    		    	debug_view.setText(str);
+    		    } break;
         		
     		    case android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND:
     		    	
         		break;
     		
-    		    case android_accessory_packet.DATA_TYPE_GET_SHAKER_RETURN:
-    		    	byte[] byte_str = new byte[handle_receive_data.get_data_size()];
-    		    	System.arraycopy(handle_receive_data.buffer, handle_receive_data.DATA_START, byte_str, 0, handle_receive_data.get_data_size());
+    		    case android_accessory_packet.DATA_TYPE_GET_SHAKER_RETURN: {
+    		    	byte[] byte_str = new byte[android_accessory_packet.get_data_size()];
+    		    	System.arraycopy(handle_receive_data.buffer, android_accessory_packet.DATA_START, byte_str, 0, android_accessory_packet.get_data_size());
     		    	String str = new String(byte_str);
     		    	
     		    	shaker_return.setText(str);
-    			break;
+    		    } break;
     			
     		    case android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA:
     		    	if (1 == get_experiment_data_start) {

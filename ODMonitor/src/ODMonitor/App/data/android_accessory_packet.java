@@ -1,14 +1,13 @@
 package ODMonitor.App.data;
 
 public class android_accessory_packet {
-	public static final byte DATA_TYPE_KEYPAD = 0;
-	public static final byte DATA_TYPE_GET_MACHINE_STATUS = 1;
-	public static final byte DATA_TYPE_SEND_SHAKER_COMMAND = 2;
-	public static final byte DATA_TYPE_GET_SHAKER_RETURN = 3;
-	public static final byte DATA_TYPE_GET_EXPERIMENT_DATA = 4;
-	public static final byte DATA_TYPE_SET_EXPERIMENT_SCRIPT = 5;
-	public static final byte DATA_TYPE_SET_EXPERIMENT_STATUS = 6;
-	public static final byte DATA_TYPE_NOTIFY_EXPERIMENT_DATA = 7;
+	public static final byte DATA_TYPE_GET_MACHINE_STATUS = 0;
+	public static final byte DATA_TYPE_SEND_SHAKER_COMMAND = 1;
+	public static final byte DATA_TYPE_GET_SHAKER_RETURN = 2;
+	public static final byte DATA_TYPE_GET_EXPERIMENT_DATA = 3;
+	public static final byte DATA_TYPE_SET_EXPERIMENT_SCRIPT = 4;
+	public static final byte DATA_TYPE_SET_EXPERIMENT_STATUS = 5;
+	public static final byte DATA_TYPE_NOTIFY_EXPERIMENT_DATA = 6;
 	
 	public static final byte  STATUS_EXPERIMENT_IDLE = 0;
 	public static final byte  STATUS_EXPERIMENT_START = 1; 
@@ -21,7 +20,6 @@ public class android_accessory_packet {
 	public static final byte  STATUS_FAIL = 1;
 	public static final byte  STATUS_HAVE_DATA = 2; 
 	public static final byte  STATUS_START = 3; 
-	
 	
 	public static final int PREFIX = 0;
 	public static final int TYPE = 1; 
@@ -78,6 +76,13 @@ public class android_accessory_packet {
 		}
 		
 		return retval;
+	}
+	
+	public byte[] get_data(int offset, int len) {
+		byte[] data = new byte[len];
+		
+		System.arraycopy(buffer, DATA_START+offset, data, 0, len);
+		return data;
 	}
 	
 	public byte get_Prefix_value() {
