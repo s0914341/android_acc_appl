@@ -103,8 +103,8 @@
             	android:layout_alignTop="@+id/ShakerStatus" 
             	android:layout_alignBottom="@+id/ShakerStatus">
             </ImageView>
-            
-              <ImageView 
+             
+             <ImageView 
             	android:layout_width="100dp" 
             	android:src="@drawable/view_connect" 
             	android:id="@+id/ConnectStatus" 
@@ -314,10 +314,10 @@
             </ImageButton> 
             
            	<ImageButton 
-            		android:background="@drawable/buttons" 
-            		android:layout_width="65dp" 
+            		android:background="@drawable/buttons_offline" 
+            		android:layout_width="80dp" 
             		android:id="@+id/Button6" 
-            		android:layout_height="65dp"
+            		android:layout_height="80dp"
             		android:adjustViewBounds="false" 
             		android:layout_toRightOf="@+id/Button5"            		
             		android:layout_alignTop="@+id/Button5"
@@ -328,7 +328,7 @@
         </RelativeLayout>          
         
         <RelativeLayout  
-        	android:layout_height="310dp" 
+        	android:layout_height="400dp" 
         	android:id="@+id/frameLayoutShaker" 
         	android:layout_width="match_parent" 
         	android:background="@drawable/border2">
@@ -368,7 +368,7 @@
             	android:id="@+id/DebugView" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
             	android:layout_width="wrap_content" 
-            	android:layout_height="80dp"
+            	android:layout_height="150dp"
             	android:layout_alignParentLeft="true" 
             	android:text="debug..."
             	android:layout_marginLeft="25dp"

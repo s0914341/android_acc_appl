@@ -71,11 +71,23 @@ public class file_operation {
 		}
 	}
 	
-	public void write_file(String line) {
+	public void write_file_with_date(String line) {
 		if (file_buf != null) {
 			String line_text = df1.format(new Date()) + "  " + line;
 			try {
 				file_buf.write(line_text, 0, line_text.length());
+				file_buf.newLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void write_file(String line) {
+		if (file_buf != null) {
+			try {
+				file_buf.write(line, 0, line.length());
 				file_buf.newLine();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

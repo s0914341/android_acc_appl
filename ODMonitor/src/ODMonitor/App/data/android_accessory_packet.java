@@ -7,7 +7,8 @@ public class android_accessory_packet {
 	public static final byte DATA_TYPE_GET_EXPERIMENT_DATA = 3;
 	public static final byte DATA_TYPE_SET_EXPERIMENT_SCRIPT = 4;
 	public static final byte DATA_TYPE_SET_EXPERIMENT_STATUS = 5;
-	public static final byte DATA_TYPE_NOTIFY_EXPERIMENT_DATA = 6;
+	public static final byte DATA_TYPE_SET_TABLET_ON_OFF_LINE = 6;
+	public static final byte DATA_TYPE_NOTIFY_EXPERIMENT_DATA = 7;
 	
 	public static final byte  STATUS_EXPERIMENT_IDLE = 0;
 	public static final byte  STATUS_EXPERIMENT_START = 1; 

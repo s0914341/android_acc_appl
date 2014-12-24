@@ -13,7 +13,7 @@ import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
 import org.achartengine.chartdemo.demo.chart.AverageTemperatureChart;
 import org.achartengine.chartdemo.demo.chart.IDemoChart;
-import org.achartengine.chartdemo.demo.chart.XYChartBuilder;
+import org.achartengine.chartdemo.demo.chart.ODChartBuilder;
 import org.achartengine.model.SeriesSelection;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
@@ -26,6 +26,7 @@ import ODMonitor.App.data.chart_display_data;
 import ODMonitor.App.data.machine_information;
 import ODMonitor.App.file.file_operate_byte_array;
 import ODMonitor.App.file.file_operation;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -131,13 +132,13 @@ public class ODMonitorActivity extends Activity{
 		shaker_return = (TextView)findViewById(R.id.ShakerReturn);
 		debug_view = (TextView)findViewById(R.id.DebugView);
 		connect_status = (ImageView)findViewById(R.id.ConnectStatus);
-		connect_status.setEnabled(true);
+		connect_status.setEnabled(false);
 		mass_storage_status = (ImageView)findViewById(R.id.MassStorageStatus);
-		mass_storage_status.setEnabled(true);
+		mass_storage_status.setEnabled(false);
 		sensor_status = (ImageView)findViewById(R.id.SensorStatus);
-		sensor_status.setEnabled(true);
+		sensor_status.setEnabled(false);
 		shaker_status = (ImageView)findViewById(R.id.ShakerStatus);
-		shaker_status.setEnabled(true);
+		shaker_status.setEnabled(false);
 		//data_write_thread = new data_write_thread(handler);
 		//data_write_thread.start();
 	//	textView2 = (TextView) findViewById(R.id.test);
@@ -145,22 +146,8 @@ public class ODMonitorActivity extends Activity{
 	//	textView2.setMovementMethod(LinkMovementMethod.getInstance());
                
         button1 = (ImageButton) findViewById(R.id.Button1);
-        button1.setOnClickListener(new View.OnClickListener()
-        {
-        	public void onClick(View v) 
-        	{
-        		byte ibutton = 0x01;
-        		Log.d("EXPERIMENT", "START EXPERIMENT");
-        		
-        	/*	ledPrevMap ^= 0x01;
-        		
-        		if((ledPrevMap & 0x01) == 0x01){
-        				led1.setImageResource(drawable.image100);
-        			}
-        			else{
-        				led1.setImageResource(drawable.image0);		
-        		}*/
-        		
+        button1.setOnClickListener(new View.OnClickListener() {
+        	public void onClick(View v) {
         		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
         		try {
         			write_file.delete_file(write_file.generate_filename_no_date());
@@ -177,22 +164,8 @@ public class ODMonitorActivity extends Activity{
 		});
         
         button2 = (ImageButton) findViewById(R.id.Button2);
-        button2.setOnClickListener(new View.OnClickListener()
-        {		
-			public void onClick(View v)
-			{
-        		byte ibutton = 0x02;
-        		//v.bringToFront();
-        		
-        	/*	ledPrevMap ^= 0x02;
-        		
-        		if((ledPrevMap & 0x02) == 0x02){
-        				led2.setImageResource(drawable.image100);
-        			}
-        			else{
-        				led2.setImageResource(drawable.image0);		
-        		}*/
-        		
+        button2.setOnClickListener(new View.OnClickListener() {		
+			public void onClick(View v) {
         		file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
         		try {
         			write_file.delete_file(write_file.generate_filename_no_date());
@@ -208,21 +181,8 @@ public class ODMonitorActivity extends Activity{
 		});
         
         button3 = (ImageButton) findViewById(R.id.Button3);
-        button3.setOnClickListener(new View.OnClickListener()
-        {
-			public void onClick(View v)
-			{
-        		byte ibutton = 0x04;
-        		//v.bringToFront();
-        		
-        	/*	ledPrevMap ^= 0x04;
-        		
-        		if((ledPrevMap & 0x04) == 0x04) {
-        				led3.setImageResource(drawable.image100);
-        		} else {
-        				led3.setImageResource(drawable.image0);		
-        		}*/
-        		
+        button3.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
         		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
 		    	try {
 		    		script_length = read_file.open_read_file(read_file.generate_filename_no_date());
@@ -231,7 +191,7 @@ public class ODMonitorActivity extends Activity{
 		    		    script = new byte[script_length];
 		    		    read_file.read_file(script);
 		    		    byte[] data = new byte[1];
-		        		data[0] = ibutton;
+		        		data[0] = 0;
 		        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, android_accessory_packet.STATUS_START, data, 0);	
 		        		Toast.makeText(ODMonitorActivity.this, "Set experiment script start", Toast.LENGTH_SHORT).show(); 
 		    		} else {
@@ -249,19 +209,7 @@ public class ODMonitorActivity extends Activity{
         button4 = (ImageButton) findViewById(R.id.Button4);
         button4.setOnClickListener(new View.OnClickListener()
         {
-			public void onClick(View v)
-			{
-        		byte ibutton = 0x08;
-        		//v.bringToFront();
-        		/*ledPrevMap ^= 0x08;
-        		
-        		if((ledPrevMap & 0x08) == 0x08){
-        				led4.setImageResource(drawable.image100);
-        			}
-        			else{
-        				led4.setImageResource(drawable.image0);		
-        		}*/
-        		
+			public void onClick(View v) {
         		show_chart_activity();
 			}
 		});  
@@ -276,20 +224,7 @@ public class ODMonitorActivity extends Activity{
         button6 = (ImageButton) findViewById(R.id.Button6);
         button6.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				file_operation read_file = new file_operation("od_sensor", "sensor_online", true);
-				try {
-					read_file.open_read_file(read_file.generate_filename_no_date());
-					String sensor_str = new String();
-					sensor_str = read_file.read_file();
-					
-					if (sensor_str != null) {
-						int[] data = null;
-				        data = OD_calculate.parse_raw_data(sensor_str);
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				set_tablet_on_off_line((byte)0);
 			}
 		});  
         
@@ -317,6 +252,12 @@ public class ODMonitorActivity extends Activity{
 		WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS, android_accessory_packet.STATUS_OK, data, 0);
     }
     
+    public void set_tablet_on_off_line(byte status) {
+		byte[] data = new byte[1];
+		data[0] = status;
+		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE, android_accessory_packet.STATUS_OK, data, 1);
+    }
+    
     public void show_chart_activity() {
     /*  final Dialog dialog = new Dialog(context);
  	    dialog.setContentView(R.layout.xy_layout);
@@ -334,7 +275,7 @@ public class ODMonitorActivity extends Activity{
  		dialog.show();*/
     	Intent intent = null;
     	//intent = mCharts[0].execute(this);
-    	intent = new Intent(this, XYChartBuilder.class);
+    	intent = new Intent(this, ODChartBuilder.class);
     	
     	startActivity(intent);
     }
@@ -386,8 +327,6 @@ public class ODMonitorActivity extends Activity{
 	}
     
     public void reconnect_to_accessory() {
-    	Intent intent = getIntent();
-    	
 		if (inputstream != null && outputstream != null) {
 			return;
 		}
@@ -459,7 +398,7 @@ public class ODMonitorActivity extends Activity{
 	public void SensorData_Receive(android_accessory_packet rec) {
 		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
 		byte[] byte_str = new byte[rec.get_Len_value()];
-    	System.arraycopy(rec.buffer, rec.DATA_START, byte_str, 0, rec.get_Len_value());
+    	System.arraycopy(rec.buffer, android_accessory_packet.DATA_START, byte_str, 0, rec.get_Len_value());
     	String str = new String(byte_str);
     	shaker_return.setText(str);
     	try {
@@ -473,10 +412,10 @@ public class ODMonitorActivity extends Activity{
 	}
 	
 	private void CloseAccessory() {
-		try{
+		try {
 			if (filedescriptor != null)
 			    filedescriptor.close();
-		}catch (IOException e){}
+		} catch (IOException e){}
 		
 		try {
 			if (inputstream != null)
@@ -499,10 +438,36 @@ public class ODMonitorActivity extends Activity{
 		
 		//System.exit(0);
 	}
+	
+	public void refresh_machine_information_view(machine_information info) {
+	    String str = String.format("time: %d\nversion: %c.%c%c%c\ncurrent instruction index: %d\nexperiment status: %s",
+	    		info.get_experiment_time(), 
+	    		info.get_version1(), info.get_version2(), info.get_version3(), info.get_version4(),
+	    		info.get_current_instruction_index(),
+	    		machine_information.EXPERIMENT_STATUS.get(info.get_experiment_status()));
+    	debug_view.setText(str);
+    	
+    	if (info.get_sensor_status() == machine_information.STATUS_SENSOR_READY)
+    		sensor_status.setEnabled(true);
+    	else
+    		sensor_status.setEnabled(false);
+    	
+    	if (info.get_mass_storage_status() == machine_information.STATUS_MASS_STORAGE_READY)
+    		mass_storage_status.setEnabled(true);
+    	else
+    		mass_storage_status.setEnabled(false);
+    	
+    	if (info.get_shaker_status() == machine_information.STATUS_SHAKER_READY)
+    		shaker_status.setEnabled(true);
+    	else
+    		shaker_status.setEnabled(false);
+    	
+    	set_tablet_on_off_line((byte)1);
+	}
 		
 	
 	final Handler handler =  new Handler() {
-    	@Override 
+    	@SuppressLint("DefaultLocale") @Override 
     	public void handleMessage(Message msg) {	
     		Bundle b = msg.getData();
     		android_accessory_packet handle_receive_data = new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE);
@@ -514,9 +479,7 @@ public class ODMonitorActivity extends Activity{
     		    case android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS: {
     		    	machine_information info = new machine_information();
     		    	info.copy_to_buffer(handle_receive_data.get_data(0, machine_information.TOTAL_SIZE), machine_information.TOTAL_SIZE);
-    		    	
-    		    	String str = String.format("time: %d version: %c.%c%c%c", info.get_experiment_time(), info.get_version1(), info.get_version2(), info.get_version3(), info.get_version4());
-    		    	debug_view.setText(str);
+    		    	refresh_machine_information_view(info);
     		    } break;
         		
     		    case android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND:
@@ -575,7 +538,7 @@ public class ODMonitorActivity extends Activity{
     		    			status = android_accessory_packet.STATUS_OK;
     		    		else
     		    			status = android_accessory_packet.STATUS_HAVE_DATA;
-    		    		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, android_accessory_packet.STATUS_HAVE_DATA, script_buffer, len);
+    		    		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, status, script_buffer, len);
     		    		script_offset += len;
     		    	} else {
     		    		script_offset = 0;
@@ -586,12 +549,16 @@ public class ODMonitorActivity extends Activity{
             	break;
     			
     		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS:
-    		    	Log.d("EXPERIMENT", "RECEIVE SET EXPERIMENT STATUS");
+    		    	Log.d(Tag, "RECEIVE SET EXPERIMENT STATUS");
                 break;
                 
     		    case android_accessory_packet.DATA_TYPE_NOTIFY_EXPERIMENT_DATA:
     		    	SensorData_Receive(handle_receive_data);
-        		break;			
+        		break;	
+        		
+    		    case android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE:
+    		    	Log.d(Tag, "Set tablet on off line");
+        		break;	
     		}
     	}
     };
@@ -622,7 +589,7 @@ public class ODMonitorActivity extends Activity{
 				Message msg = mHandler.obtainMessage();
 				try {
 					if (instream != null) {	
-					    readcount = instream.read(receive_data[receive_data_index].buffer, read_offset, receive_data[receive_data_index].get_size());
+					    readcount = instream.read(receive_data[receive_data_index].buffer, read_offset, android_accessory_packet.get_size());
 					    if (readcount > 0) {
 					        read_offset += readcount;
 					        if (android_accessory_packet.PREFIX_VALUE == receive_data[receive_data_index].get_Prefix_value()) {
@@ -719,7 +686,7 @@ public class ODMonitorActivity extends Activity{
 		
 		try{
 			if(outputstream != null){
-				outputstream.write(acc_pkg_transfer.buffer, 0,  len + acc_pkg_transfer.get_header_size());
+				outputstream.write(acc_pkg_transfer.buffer, 0,  len + android_accessory_packet.get_header_size());
 			}
 		}
 		catch (IOException e) {}		

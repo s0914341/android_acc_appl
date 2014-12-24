@@ -29,7 +29,7 @@
             	android:resource="@xml/accessory_filter">
             </meta-data>
         </activity>
-        <activity android:name="org.achartengine.chartdemo.demo.chart.XYChartBuilder"
+        <activity android:name="org.achartengine.chartdemo.demo.chart.ODChartBuilder"
                   android:theme="@android:style/Theme.NoTitleBar"
                   android:launchMode="singleTask" />
         

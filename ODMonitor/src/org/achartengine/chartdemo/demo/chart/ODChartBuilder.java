@@ -17,6 +17,7 @@ package org.achartengine.chartdemo.demo.chart;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -51,7 +52,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-public class XYChartBuilder extends Activity {
+public class ODChartBuilder extends Activity {
   public String Tag = "XYChartBuilder";
   /** The main dataset that includes all the series that go into a chart. */
   private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
@@ -264,10 +265,9 @@ public class XYChartBuilder extends Activity {
   }*/
   
     public void init_time_series() {
-        int file_len = 0;
         Date date = null;
-        long ms = 0;
         double od_value = 0;
+        long experiment_start_ms = 0;
         
    
 		file_operation read_file = new file_operation("od_sensor", "sensor_online", true);
@@ -288,6 +288,13 @@ public class XYChartBuilder extends Activity {
         try {    	
 	        String sensor_str = new String();
 	        sensor_str = read_file.read_file();
+	        if(sensor_str != null) {
+	        	byte[] temp = OD_calculate.parse_date(sensor_str);
+	        	ByteBuffer byte_buffer = ByteBuffer.wrap(temp, 0, 8);
+	    		//byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+	        	experiment_start_ms = byte_buffer.getLong();
+	        }
+	        sensor_str = read_file.read_file();
 	        while (sensor_str != null) {
 				int[] data = null;
 		        data = OD_calculate.parse_raw_data(sensor_str);
@@ -295,8 +302,7 @@ public class XYChartBuilder extends Activity {
 		            int[] channel_data = new int[OD_calculate.total_sensor_channel];
 		            System.arraycopy(data, OD_calculate.sensor_ch1_index, channel_data, 0, OD_calculate.total_sensor_channel);
 		            od_value = OD_calculate.calculate_od(channel_data);
-		            date = new Date(data[OD_calculate.year_index], data[OD_calculate.month_index], data[OD_calculate.day_index], 
-		            		data[OD_calculate.hour_index], data[OD_calculate.minute_index], data[OD_calculate.second_index]);
+		            date = new Date(experiment_start_ms + (long)(data[OD_calculate.experiment_seconds_index]*1000));
 		            
 		            if (mCurrentSeries == null) {
 		            	mRenderer.setRange(new double[] {date.getTime(), date.getTime()+20000, 0, 50});
@@ -355,11 +361,11 @@ public class XYChartBuilder extends Activity {
           // handle the click event on the chart
               SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
               if (seriesSelection == null) {
-                  Toast.makeText(XYChartBuilder.this, "No chart element", Toast.LENGTH_SHORT).show();
+                  Toast.makeText(ODChartBuilder.this, "No chart element", Toast.LENGTH_SHORT).show();
               } else {
                   // display information of the clicked point
                   Toast.makeText(
-                      XYChartBuilder.this,
+                      ODChartBuilder.this,
                       "Chart element in series index " + seriesSelection.getSeriesIndex()
                       + " data point index " + seriesSelection.getPointIndex() + " was clicked"
                       + " closest point value X=" + seriesSelection.getXValue() + ", Y="

@@ -2,15 +2,40 @@ package ODMonitor.App.data;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class machine_information {
+	public static final Map<Byte, String> EXPERIMENT_STATUS;
+	static {
+        Map<Byte, String> aMap = new HashMap<Byte, String>();
+		aMap.put((byte)0, "Idle");
+		aMap.put((byte)1, "Start");
+		aMap.put((byte)2, "Running");
+		aMap.put((byte)3, "Stop");
+		aMap.put((byte)4, "Storage full");
+		aMap.put((byte)5, "Finish");
+		EXPERIMENT_STATUS = Collections.unmodifiableMap(aMap);
+   }
+	
+	public static final byte STATUS_SHAKER_NOT_READY = 0;
+	public static final byte STATUS_SHAKER_READY = 1;
+	public static final byte STATUS_SHAKER_NO_RESPONSE = 2;
+	
+	public static final byte STATUS_SENSOR_NOT_READY = 0;
+	public static final byte STATUS_SENSOR_READY = 1;
+	
+	public static final byte STATUS_MASS_STORAGE_NOT_READY = 0;
+	public static final byte STATUS_MASS_STORAGE_READY = 1;
+	
 	public static final int SHAKER_STATUS_INDEX = 0;
 	public static final int SENSOR_STATUS_INDEX = 1; 
 	public static final int MASS_STORAGE_STATUS_INDEX = 2; 
 	public static final int EXPERIMENT_STATUS_INDEX = 3; 
 	public static final int SYNCHRONOUS_DATA_INDEX = 4;
-	public static final int CURRENT_INSTRUCTION_INDEX = 5; 
+	public static final int CURRENT_INSTRUCTION_INDEX_INDEX = 5; 
 	public static final int EXPERIMENT_TIMER_INDEX = 9;
 	public static final int VERSION1_INDEX = 13;
 	public static final int VERSION2_INDEX = 14;
@@ -44,8 +69,8 @@ public class machine_information {
 	    return buffer[SYNCHRONOUS_DATA_INDEX];
 	}
 	
-	public int get_current_instruction() {
-		ByteBuffer byte_buffer = ByteBuffer.wrap(buffer, CURRENT_INSTRUCTION_INDEX, 4);
+	public int get_current_instruction_index() {
+		ByteBuffer byte_buffer = ByteBuffer.wrap(buffer, CURRENT_INSTRUCTION_INDEX_INDEX, 4);
 		byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
         int ret = byte_buffer.getInt();
         

@@ -13,11 +13,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.achartengine.chartdemo.demo.chart.IDemoChart;
-import org.achartengine.chartdemo.demo.chart.XYChartBuilder;
+import org.achartengine.chartdemo.demo.chart.ODChartBuilder;
 
 import ODMonitor.App.R.drawable;
 import ODMonitor.App.data.experiment_script_data;
-import ODMonitor.App.data.script_data_exchange;
 import ODMonitor.App.file.file_operate_byte_array;
 import android.app.Activity;
 import android.app.ListActivity;
