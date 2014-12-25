@@ -31,6 +31,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -65,7 +66,7 @@ import android.widget.Toast;
 
 public class ODMonitorActivity extends Activity{
 	public String Tag = "ODMonitorActivity";
-	private static final String ACTION_USB_PERMISSION = "OD.MONITOR.USB_PERMISSION";
+	private static final String ACTION_USB_PERMISSION = "FTDI.LED.USB_PERMISSION";
 	public UsbManager usbmanager;
 	public UsbAccessory usbaccessory;
 	public PendingIntent mPermissionIntent;
@@ -109,8 +110,10 @@ public class ODMonitorActivity extends Activity{
     /*thread to listen USB data*/
     public handler_thread handlerThread;
     public data_write_thread data_write_thread;
+    public Object sync_object;
     
     public TextView textView2;
+    public ProgressDialog mypDialog;
     
 	/** Called when the activity is first created. */
     @Override
@@ -125,7 +128,7 @@ public class ODMonitorActivity extends Activity{
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-        //filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
+      //  filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
         Log.d(Tag, "filter" +filter);
         registerReceiver(mUsbReceiver, filter);
 		
@@ -144,6 +147,16 @@ public class ODMonitorActivity extends Activity{
 	//	textView2 = (TextView) findViewById(R.id.test);
 	//	textView2.setText( Html.fromHtml("<a href=\"http://www.maestrogen.com/ftp/i-track/user_manual.html\">iTrack User Manual</a>") );
 	//	textView2.setMovementMethod(LinkMovementMethod.getInstance());
+		
+		mypDialog = new ProgressDialog(this);
+		mypDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		mypDialog.setTitle("OD Monitor");
+		mypDialog.setMessage("Get device information!");
+		//mypDialog.setIcon(R.drawable.android);
+		//mypDialog.setButton("Google",this);
+		mypDialog.setIndeterminate(true);
+		mypDialog.setCancelable(false);
+		sync_object = new Object();
                
         button1 = (ImageButton) findViewById(R.id.Button1);
         button1.setOnClickListener(new View.OnClickListener() {
@@ -224,7 +237,7 @@ public class ODMonitorActivity extends Activity{
         button6 = (ImageButton) findViewById(R.id.Button6);
         button6.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				set_tablet_on_off_line((byte)0);
+				set_tablet_on_off_line((byte)0, false);
 			}
 		});  
         
@@ -246,16 +259,59 @@ public class ODMonitorActivity extends Activity{
         Log.d ( Tag, this.getIntent().getAction());
     }
     
-    public void get_machine_information() {
+    @Override
+    protected void onNewIntent(Intent intent) {
+
+        super.onNewIntent(intent);
+
+    	setIntent(intent);//must store the new intent unless getIntent() will return the old one
+
+    	  //processExtraData();
+    	
+    /*	usbmanager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        Log.d(Tag, "usbmanager" +usbmanager);
+        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
+        //filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
+        Log.d(Tag, "filter" +filter);
+        registerReceiver(mUsbReceiver, filter);*/
+    }
+    
+    public void get_machine_information(boolean block) {
 		byte[] data = new byte[1];
 		data[0] = 0;
 		WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS, android_accessory_packet.STATUS_OK, data, 0);
+		
+		if (false == block)
+			return;
+		
+		synchronized (sync_object) {
+		    try {
+		    	sync_object.wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
     }
     
-    public void set_tablet_on_off_line(byte status) {
+    public void set_tablet_on_off_line(byte status, boolean block) {
 		byte[] data = new byte[1];
 		data[0] = status;
 		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE, android_accessory_packet.STATUS_OK, data, 1);
+		
+		if (false == block)
+			return;
+		
+		synchronized (sync_object) {
+		    try {
+		    	sync_object.wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
     }
     
     public void show_chart_activity() {
@@ -365,11 +421,20 @@ public class ODMonitorActivity extends Activity{
     
 	@Override
 	public void onDestroy() {
-		//unregisterReceiver(mUsbReceiver);
+		/* when tablet rotate , it will exec onCreate again */
 		//CloseAccessory();
+		//unregisterReceiver(mUsbReceiver);
 		Log.d(Tag, "on Destory");
 		super.onDestroy();
 	}
+	
+	class initial_task implements Runnable {
+		public void run() {	
+			get_machine_information(true);
+			set_tablet_on_off_line((byte)1, true);
+	    } 	
+	}
+
 	
 	
 	/*open the accessory*/
@@ -387,11 +452,13 @@ public class ODMonitorActivity extends Activity{
 			}
 		}
 		
-		handlerThread = new handler_thread(handler, inputstream);
-		handlerThread.start();
+		//if (handlerThread == null) {
+		    handlerThread = new handler_thread(handler, inputstream);
+		    handlerThread.start();
+		//}
 		connect_status.setEnabled(true);
-		
-		get_machine_information();
+		mypDialog.show();
+		new Thread(new initial_task()).start();
 		
 	} /*end OpenAccessory*/
 	
@@ -462,7 +529,11 @@ public class ODMonitorActivity extends Activity{
     	else
     		shaker_status.setEnabled(false);
     	
-    	set_tablet_on_off_line((byte)1);
+    	if (sync_object != null) {
+    	    synchronized (sync_object) {
+    		    sync_object.notify();
+    	    }
+    	}
 	}
 		
 	
@@ -558,11 +629,17 @@ public class ODMonitorActivity extends Activity{
         		
     		    case android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE:
     		    	Log.d(Tag, "Set tablet on off line");
+    		    	
+    		    	if (sync_object != null) {
+    		    	    synchronized (sync_object) {
+    		    		    sync_object.notify();
+    		    	    }
+    		    	}
+    		    	mypDialog.cancel();
         		break;	
     		}
     	}
     };
-  
 	
 	private class handler_thread  extends Thread {
 		Handler mHandler;
