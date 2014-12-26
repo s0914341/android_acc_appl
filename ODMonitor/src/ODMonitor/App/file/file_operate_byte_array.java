@@ -40,8 +40,8 @@ public class file_operate_byte_array extends file_operation {
 	}
 	 
 	@Override
-	public int open_read_file(String filename) throws IOException {
-		int ret = 0;
+	public long open_read_file(String filename) throws IOException {
+		long ret = 0;
 			
 		if (sdcard.exists()) {
 			if (!file_MetaData.exists()) {
@@ -51,7 +51,7 @@ public class file_operate_byte_array extends file_operation {
 		    } else {
 				file = new File(file_MetaData, filename);
 				fis = new FileInputStream(file.getAbsolutePath());  
-				ret = (int)file.length();
+				ret = file.length();
 			}
 		} else {
 			ret = -2;
@@ -100,4 +100,16 @@ public class file_operate_byte_array extends file_operation {
 			e.printStackTrace();
 		}
 	}
+	
+	public void seek_read_file(long position) {
+		if (fis != null) {
+			try {
+				fis.skip(position);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }

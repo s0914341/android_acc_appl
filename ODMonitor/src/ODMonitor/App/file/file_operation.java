@@ -146,8 +146,8 @@ public class file_operation {
 		}
 	}
 	
-	public int open_read_file(String filename) throws IOException {
-		int ret = -1;
+	public long open_read_file(String filename) throws IOException {
+		long ret = -1;
 		
 		if (sdcard.exists()) {
 			if (!file_MetaData.exists()) {

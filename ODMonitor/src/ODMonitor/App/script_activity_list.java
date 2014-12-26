@@ -248,11 +248,11 @@ public class script_activity_list extends Activity {
         	public void onClick(View v) {
         		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
         		try {
-        	        int file_len = 0;
+        	        long file_len = 0;
         	        
         			file_len = read_file.open_read_file(read_file.generate_filename_no_date());
         			if (file_len > 0) {
-        				byte[] read_buf = new byte[file_len];
+        				byte[] read_buf = new byte[(int)file_len];
         				read_file.read_file(read_buf);
         			
         				list.clear();

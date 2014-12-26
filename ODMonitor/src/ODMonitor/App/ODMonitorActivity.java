@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -101,7 +103,7 @@ public class ODMonitorActivity extends Activity{
     public TextView shaker_return;
     public TextView debug_view;
     public int get_experiment_data_start = 0;
-    public int script_length = 0;
+    public long script_length = 0;
     public int script_offset = 0;
     public byte[] script = null;
     private IDemoChart[] mCharts = new IDemoChart[] { new AverageTemperatureChart() };
@@ -201,7 +203,7 @@ public class ODMonitorActivity extends Activity{
 		    		script_length = read_file.open_read_file(read_file.generate_filename_no_date());
 		    		
 		    		if (script_length > 0) {
-		    		    script = new byte[script_length];
+		    		    script = new byte[(int)script_length];
 		    		    read_file.read_file(script);
 		    		    byte[] data = new byte[1];
 		        		data[0] = 0;
@@ -238,6 +240,7 @@ public class ODMonitorActivity extends Activity{
         button6.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				set_tablet_on_off_line((byte)0, false);
+				//SensorDataReceive();
 			}
 		});  
         
@@ -256,7 +259,7 @@ public class ODMonitorActivity extends Activity{
          } 
          });
         
-        Log.d ( Tag, this.getIntent().getAction());
+        Log.d ( Tag, "intent get action: " +this.getIntent().getAction());
     }
     
     @Override
@@ -417,13 +420,14 @@ public class ODMonitorActivity extends Activity{
     public void onPause() {
     	Log.d(Tag, "on Pause");
     	super.onPause();
+    	CloseAccessory();
     }
     
 	@Override
 	public void onDestroy() {
 		/* when tablet rotate , it will exec onCreate again */
 		//CloseAccessory();
-		//unregisterReceiver(mUsbReceiver);
+		unregisterReceiver(mUsbReceiver);
 		Log.d(Tag, "on Destory");
 		super.onDestroy();
 	}
@@ -462,20 +466,53 @@ public class ODMonitorActivity extends Activity{
 		
 	} /*end OpenAccessory*/
 	
-	public void SensorData_Receive(android_accessory_packet rec) {
-		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
+	public void SensorDataReceive(android_accessory_packet rec) {
+		file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
+		file_operate_byte_array read_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
 		byte[] byte_str = new byte[rec.get_Len_value()];
     	System.arraycopy(rec.buffer, android_accessory_packet.DATA_START, byte_str, 0, rec.get_Len_value());
     	String str = new String(byte_str);
-    	shaker_return.setText(str);
     	try {
-    		write_file.create_file(write_file.generate_filename_no_date());
-    		write_file.write_file(str);
-    		write_file.flush_close_file();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+ 	        long size = read_file.open_read_file(read_file.generate_filename_no_date());
+ 	        if (size <= 0)
+ 	        	return;
+ 	        
+ 	        read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size)+4);
+ 	      //  byte[] final_pre_raw_index_bytes = new byte[4];
+ 	        byte[] final_current_raw_index_bytes = new byte[4];
+ 	      //  read_file.read_file(final_pre_raw_index_bytes);
+ 	        read_file.read_file(final_current_raw_index_bytes);
+ 	      //  ByteBuffer byte_buffer = ByteBuffer.wrap(final_pre_raw_index_bytes, 0, 4);
+   		    //byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+          //  int final_pre_raw_index = byte_buffer.getInt();
+ 	        ByteBuffer byte_buffer = ByteBuffer.wrap(final_current_raw_index_bytes, 0, 4);
+            byte_buffer = ByteBuffer.wrap(final_current_raw_index_bytes, 0, 4);
+   		    //byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+            int final_current_raw_index = byte_buffer.getInt();
+            
+            int[] data = null;
+	        data = OD_calculate.parse_raw_data(str);
+	        if (data != null) {
+	        	if (final_current_raw_index == data[OD_calculate.pre_raw_index_index]) {
+	        		try {
+	            		write_file.create_file(write_file.generate_filename_no_date());
+	            		ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);        
+	                    IntBuffer intBuffer = byteBuffer.asIntBuffer();
+	                    intBuffer.put(data);
+	                    byte[] data_bytes = byteBuffer.array();
+	            		write_file.write_file(data_bytes);
+	            		write_file.flush_close_file();
+	            		shaker_return.setText(str);
+	        		} catch (IOException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		}
+	        	}
+	        } 
+         } catch (IOException e) {
+ 	        // TODO Auto-generated catch block
+ 	        e.printStackTrace();
+         }
 	}
 	
 	private void CloseAccessory() {
@@ -502,6 +539,9 @@ public class ODMonitorActivity extends Activity{
 		inputstream = null;
 		outputstream = null;
 		connect_status.setEnabled(false);
+		mass_storage_status.setEnabled(false);
+		sensor_status.setEnabled(false);
+		shaker_status.setEnabled(false);
 		
 		//System.exit(0);
 	}
@@ -534,6 +574,55 @@ public class ODMonitorActivity extends Activity{
     		    sync_object.notify();
     	    }
     	}
+	}
+	
+	public void convert__string_to_byte_file() {
+		file_operation read_file = new file_operation("od_sensor", "sensor_offline", true);
+        try {
+	        read_file.open_read_file(read_file.generate_filename_no_date());
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+        
+        file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
+    	try {
+            write_file.create_file(write_file.generate_filename_no_date());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        try {    	
+	        String sensor_str = new String();
+	        sensor_str = read_file.read_file();
+	        if(sensor_str != null) {
+	        	byte[] temp = OD_calculate.parse_date(sensor_str);
+	        	write_file.write_file(temp);
+	        }
+	        
+	        sensor_str = read_file.read_file();
+	        while (sensor_str != null) {
+				int[] data = null;
+		        data = OD_calculate.parse_raw_data(sensor_str);
+		        if (data != null) {
+		        	for (int i = 0; i < data.length; i++) {
+		        		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+		        		byte[] bytes = byteBuffer.putInt(data[i]).array();
+		        		write_file.write_file(bytes);
+		        	}
+		        } else {
+		        	Log.e(Tag, "parse raw data fail");
+		        }
+		        
+		        sensor_str = read_file.read_file();
+			} 
+	        
+	        write_file.flush_close_file();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
 	}
 		
 	
@@ -587,6 +676,7 @@ public class ODMonitorActivity extends Activity{
         		    	
         		    	if (android_accessory_packet.STATUS_OK == handle_receive_data.get_Status_value()) {
         		    		get_experiment_data_start = 0;
+        		    		convert__string_to_byte_file();
         		    		Toast.makeText(ODMonitorActivity.this, "Get experiment data complete", Toast.LENGTH_SHORT).show(); 
         		    	}
     		    	
@@ -595,7 +685,7 @@ public class ODMonitorActivity extends Activity{
         		
     		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT:
     		    	if (script_offset < script_length) {
-    		    		int len = 0;
+    		    		long len = 0;
     		    		byte status = android_accessory_packet.STATUS_HAVE_DATA;
     		    		byte[] script_buffer;
     		    		if ((script_length-script_offset) > android_accessory_packet.DATA_SIZE)
@@ -603,13 +693,13 @@ public class ODMonitorActivity extends Activity{
     		    		else
     		    			len = script_length-script_offset;
     		    		
-    		    		script_buffer = new byte[len];
-    		    		System.arraycopy(script, script_offset, script_buffer, 0, len);
+    		    		script_buffer = new byte[(int)len];
+    		    		System.arraycopy(script, script_offset, script_buffer, 0, (int)len);
     		    		if ((script_offset+len) == script_length)
     		    			status = android_accessory_packet.STATUS_OK;
     		    		else
     		    			status = android_accessory_packet.STATUS_HAVE_DATA;
-    		    		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, status, script_buffer, len);
+    		    		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT, status, script_buffer, (int)len);
     		    		script_offset += len;
     		    	} else {
     		    		script_offset = 0;
@@ -624,7 +714,7 @@ public class ODMonitorActivity extends Activity{
                 break;
                 
     		    case android_accessory_packet.DATA_TYPE_NOTIFY_EXPERIMENT_DATA:
-    		    	SensorData_Receive(handle_receive_data);
+    		    	SensorDataReceive(handle_receive_data);
         		break;	
         		
     		    case android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE:
@@ -661,8 +751,9 @@ public class ODMonitorActivity extends Activity{
 			Bundle b = new Bundle(3);
 			int read_offset = 0;
 			int receive_data_index = 0;
+			boolean running = true;
 			
-			while(true) {
+			while(running) {
 				Message msg = mHandler.obtainMessage();
 				try {
 					if (instream != null) {	
@@ -689,7 +780,9 @@ public class ODMonitorActivity extends Activity{
 					        }
 					    }
 					}
-				} catch (IOException e){}
+				} catch (IOException e){
+					running = false;
+				}
 			}
 		}
 	}
@@ -778,6 +871,7 @@ public class ODMonitorActivity extends Activity{
 					UsbAccessory accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
 					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 						OpenAccessory(accessory);
+						Log.d(Tag, "BroadcastReceiver open accessory "+ accessory);
 					} else {
 						Log.d(Tag, "permission denied for accessory "+ accessory);
 						

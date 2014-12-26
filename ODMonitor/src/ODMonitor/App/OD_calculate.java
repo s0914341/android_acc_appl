@@ -19,19 +19,21 @@ public class OD_calculate {
 	public static final double e_single_DNA = 33; //ng-cm/£gl, Single-stranded DNA
 	public static final double e_RNA = 40; //ng-cm/£gl, RNA
 	
-	public static final int experiment_seconds_index = 0;
-	public static final int index_index = 1;
-	public static final int sensor_ch1_index = 2;
-	public static final int sensor_ch2_index = 3;
-	public static final int sensor_ch3_index = 4;
-	public static final int sensor_ch4_index = 5;
-	public static final int sensor_ch5_index = 6;
-	public static final int sensor_ch6_index = 7;
-	public static final int sensor_ch7_index = 8;
-	public static final int sensor_ch8_index = 9;
+	public static final int pre_raw_index_index = 0;
+	public static final int current_raw_index_index = 1;
+	public static final int experiment_seconds_index = 2;
+	public static final int sensor_index_index = 3;
+	public static final int sensor_ch1_index = 4;
+	public static final int sensor_ch2_index = 5;
+	public static final int sensor_ch3_index = 6;
+	public static final int sensor_ch4_index = 7;
+	public static final int sensor_ch5_index = 8;
+	public static final int sensor_ch6_index = 9;
+	public static final int sensor_ch7_index = 10;
+	public static final int sensor_ch8_index = 11;
 	
 	public static final int total_sensor_channel = 8;
-	public static final int experiment_data_size = 10;
+	public static final int experiment_data_size = 12;
 	
 	public static final double[] Upscale_factors = new double[] {13000/10, 13000/30.9, 13000/78.7, 13000/260, 13000/549, 13000/1500, 13000/5100, 1};
 	public static final double[] Adjecency_Channel_Ratio = new double[] {30.9/10, 78.7/30.9, 260/78.7, 549/260, 1500/549, 5100/1500, 13000/5100};

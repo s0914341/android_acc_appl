@@ -169,7 +169,7 @@ public class ODChartBuilder extends Activity {
 		}
 		
 		public void run() {
-			int file_len = 0;
+			long file_len = 0;
 			Bundle b = new Bundle(1);
 			
 			file_operate_byte_array read_file = new file_operate_byte_array("testExperimentData", "testExperimentData", true);
@@ -178,7 +178,7 @@ public class ODChartBuilder extends Activity {
 				try {
 					file_len = read_file.open_read_file(read_file.generate_filename_no_date());
 					if (file_len > 0) {
-						byte[] read_buf = new byte[file_len];
+						byte[] read_buf = new byte[(int)file_len];
 						read_file.read_file(read_buf);
 					    chart_display_data chart_data = new chart_display_data();
 					    byte[] chart_temp = new byte[chart_display_data.get_total_length()];
@@ -309,7 +309,7 @@ public class ODChartBuilder extends Activity {
 	  			        CreateNewSeries();
 		            }
 		            
-		            current_index = (long)data[OD_calculate.index_index];
+		            current_index = (long)data[OD_calculate.sensor_index_index];
 	    	        mCurrentSeries.add(date, od_value);
 		        } else {
 		        	Log.e(Tag, "parse raw data fail");
