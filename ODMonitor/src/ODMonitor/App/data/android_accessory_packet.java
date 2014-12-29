@@ -1,5 +1,8 @@
 package ODMonitor.App.data;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 public class android_accessory_packet {
 	public static final byte DATA_TYPE_GET_MACHINE_STATUS = 0;
 	public static final byte DATA_TYPE_SEND_SHAKER_COMMAND = 1;
@@ -35,6 +38,8 @@ public class android_accessory_packet {
 	public static final byte INIT_PREFIX_VALUE = 1;
 	public static final byte NO_INIT_PREFIX_VALUE = 0;
 	public static final String key_receive = "ODMonitorReceive";
+	
+	public static final int GET_FILE_STRUCT_SIZE = 4;
 
 	public byte[] buffer = new byte[TOTAL_SIZE]; /* data content */
 	
@@ -57,6 +62,18 @@ public class android_accessory_packet {
 	
 	public void set_Len(byte indata) {
 		buffer[LEN] = indata;
+	}
+	
+	public static byte[] set_file_struct(int address) {
+		byte[] file_struct = new byte[GET_FILE_STRUCT_SIZE];
+		int offset = 0;
+		
+		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+	    byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+	    byte[] address_bytes = byteBuffer.putInt(address).array();
+	    System.arraycopy(address_bytes, 0, file_struct, offset, 4);
+	    
+	    return file_struct;
 	}
 
 	public int copy_to_data(byte[] indata, int len) {

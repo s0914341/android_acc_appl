@@ -36,10 +36,13 @@ import ODMonitor.App.OD_calculate;
 import ODMonitor.App.R;
 import ODMonitor.App.data.android_accessory_packet;
 import ODMonitor.App.data.chart_display_data;
+import ODMonitor.App.data.experiment_script_data;
+import ODMonitor.App.data.sync_data;
 import ODMonitor.App.file.file_operate_byte_array;
 import ODMonitor.App.file.file_operate_chart;
 import ODMonitor.App.file.file_operation;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -66,12 +69,15 @@ public class ODChartBuilder extends Activity {
   private GraphicalView mChartView;
   public data_read_thread data_read_thread;
   public long current_index = -1;
+  public int current_raw_index = -1;
   
   private static final long SECOND = 1000;
   private static final long MINUTE = 60*SECOND;
   private static final long HOUR = 60*MINUTE;
   private static final long DAY = 24*HOUR;
   private static final int HOURS = 24;
+  
+  public sync_data sync_chart_notify;
 
 
   @Override
@@ -102,6 +108,9 @@ public class ODChartBuilder extends Activity {
       setContentView(R.layout.xy_layout);
       getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
       Thread.currentThread().setName("Thread_XYChartBuilder");
+      
+      Intent intent = getIntent(); 
+      sync_chart_notify = (sync_data)intent.getSerializableExtra("sync chart notify");
       // set some properties on the main renderer
       mRenderer.setApplyBackgroundColor(true);
       mRenderer.setBackgroundColor(Color.argb(100, 50, 50, 50));
@@ -119,8 +128,8 @@ public class ODChartBuilder extends Activity {
       mRenderer.setPointSize(5);
     
       init_time_series();
-    //  data_read_thread = new data_read_thread(handler);
-    //  data_read_thread.start();
+      data_read_thread = new data_read_thread(handler);
+      data_read_thread.start();
   }
   
   public void refresh_current_view_range(Date x, double y) {
@@ -171,11 +180,85 @@ public class ODChartBuilder extends Activity {
 		public void run() {
 			long file_len = 0;
 			Bundle b = new Bundle(1);
+			long size = 0;
 			
-			file_operate_byte_array read_file = new file_operate_byte_array("testExperimentData", "testExperimentData", true);
-				
 			while(true) {
-				try {
+				synchronized (sync_chart_notify) {
+				    try {
+				    	sync_chart_notify.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				
+				file_operate_byte_array read_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
+		        try {
+		        	size = read_file.open_read_file(read_file.generate_filename_no_date());
+		        } catch (IOException e) {
+			        // TODO Auto-generated catch block
+			        e.printStackTrace();
+		        }
+		        
+		        read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size));
+    	        byte[] new_pre_raw_index_bytes = new byte[4];
+    	        read_file.read_file(new_pre_raw_index_bytes);
+    	        ByteBuffer byte_buffer = ByteBuffer.wrap(new_pre_raw_index_bytes, 0, 4);
+                byte_buffer = ByteBuffer.wrap(new_pre_raw_index_bytes, 0, 4);
+                int new_pre_raw_index = byte_buffer.getInt();
+		        
+                if (new_pre_raw_index == current_raw_index) {
+                	double od_value = 0;
+                	read_file.seek_read_file(0);
+                	byte[] experiment_start_ms_bytes = new byte[8];
+                	read_file.read_file(experiment_start_ms_bytes);
+  
+         			byte_buffer = ByteBuffer.wrap(experiment_start_ms_bytes, 0, 8);
+         			//byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+         			long experiment_start_ms = byte_buffer.getLong();
+                	
+                	
+                	byte[] data = new byte[4*OD_calculate.experiment_data_size];
+                	read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size));
+                	read_file.read_file(data);
+                	
+                	
+                	int[] channel_data = new int[OD_calculate.total_sensor_channel];
+   				    byte_buffer = ByteBuffer.wrap(data, OD_calculate.current_raw_index_index*4, 4);
+   				    current_raw_index = byte_buffer.getInt();
+   				 
+   				
+   				    byte_buffer = ByteBuffer.wrap(data, 4*OD_calculate.experiment_seconds_index, 4);
+   				    long elapsed_time = (long)(byte_buffer.getInt()*1000);
+   				    Date date = new Date(experiment_start_ms + elapsed_time);	 
+  
+   				 
+   				    byte_buffer = ByteBuffer.wrap(data, 4*OD_calculate.sensor_index_index, 4);
+   				    current_index = byte_buffer.getInt();
+   			
+   				    for (int i = 0; i < OD_calculate.total_sensor_channel; i++) {
+   		        	    byte_buffer = ByteBuffer.wrap(data, 4*(OD_calculate.sensor_ch1_index+1), 4);
+   		        	    channel_data[i] = byte_buffer.getInt();
+   				    }
+   				 
+   		            od_value = OD_calculate.calculate_od(channel_data);      
+   		          /*  if (mCurrentSeries == null) {
+   		                mRenderer.setRange(new double[] {date.getTime(), date.getTime()+20000, 0, 50});
+   				        CreateNewSeries();
+   		            }*/
+   		            
+   		            Message msg = mHandler.obtainMessage();
+   		            chart_display_data chart_data = new chart_display_data();
+   		            chart_data.set_index_value(current_index);
+   		            chart_data.set_date_value(experiment_start_ms + elapsed_time);
+   		            chart_data.set_concentration_value(od_value);
+   		            b.putSerializable("chart", chart_data);
+		            msg.setData(b);
+ 	                mHandler.sendMessage(msg);
+   			      //  mCurrentSeries.add(date, od_value);
+                }
+			}
+			/*	try {
 					file_len = read_file.open_read_file(read_file.generate_filename_no_date());
 					if (file_len > 0) {
 						byte[] read_buf = new byte[(int)file_len];
@@ -216,7 +299,7 @@ public class ODChartBuilder extends Activity {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
+			}*/
 		}
 	}
   
@@ -264,7 +347,7 @@ public class ODChartBuilder extends Activity {
 	}
   }*/
   
-    public void init_time_series() {
+   /* public void init_time_series() {
         Date date = null;
         double od_value = 0;
         long experiment_start_ms = 0;
@@ -323,62 +406,136 @@ public class ODChartBuilder extends Activity {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
         }
+    }*/
+    
+    public void init_time_series() {
+        Date date = null;
+        double od_value = 0;
+        long experiment_start_ms = 0;
+        long size = 0;
+        
+   
+        file_operate_byte_array read_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
+        try {
+        	size = read_file.open_read_file(read_file.generate_filename_no_date());
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	      /*  read_file = new file_operation("od_sensor", "sensor_offline", true);
+	        try {
+				read_file.open_read_file(read_file.generate_filename_no_date());
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}*/
+        }
+        
+        if (size >= 8) {
+			int offset = 0;
+		    byte[] data = new byte[(int) size];
+		    
+		    read_file.read_file(data);
+		    
+		    byte[] experiment_start_ms_bytes = new byte[8];
+		    System.arraycopy(data, 0, experiment_start_ms_bytes, 0, 8);
+		    offset += 8;
+			ByteBuffer byte_buffer = ByteBuffer.wrap(experiment_start_ms_bytes, 0, 8);
+			//byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+			experiment_start_ms = byte_buffer.getLong();
+			
+			while (size-offset >= (OD_calculate.experiment_data_size*4)) {
+				 int[] channel_data = new int[OD_calculate.total_sensor_channel];
+				 byte_buffer = ByteBuffer.wrap(data, offset, 4);
+				 offset += OD_calculate.current_raw_index_index*4;
+				 current_raw_index = byte_buffer.getInt();
+				 
+				 offset += (OD_calculate.experiment_seconds_index - OD_calculate.current_raw_index_index) *4;
+				 byte_buffer = ByteBuffer.wrap(data, offset, 4);
+				 long elapsed_time = (long)(byte_buffer.getInt()*1000);
+				 date = new Date(experiment_start_ms + elapsed_time);	 
+				 offset += (OD_calculate.sensor_index_index-OD_calculate.experiment_seconds_index)*4;
+				 
+				 byte_buffer = ByteBuffer.wrap(data, offset, 4);
+				 current_index = byte_buffer.getInt();
+				 offset += (OD_calculate.sensor_ch1_index-OD_calculate.sensor_index_index)*4;
+				 for (int i = 0; i < OD_calculate.total_sensor_channel; i++) {
+					byte[] channel_data_bytes = new byte[4];
+					System.arraycopy(data, offset, channel_data_bytes, 0, 4);
+		     	    offset += 4;
+		        	ByteBuffer byte_buffer_channel = ByteBuffer.wrap(channel_data_bytes, 0, 4);
+		    		//byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
+		        	channel_data[i] = byte_buffer_channel.getInt();
+				 }
+				 
+		         od_value = OD_calculate.calculate_od(channel_data);      
+		         if (mCurrentSeries == null) {
+		             mRenderer.setRange(new double[] {date.getTime(), date.getTime()+20000, 0, 50});
+				     CreateNewSeries();
+		         }
+		            
+		       // current_index = (long)data[OD_calculate.sensor_index_index];
+			     mCurrentSeries.add(date, od_value);
+			}
+		    
+			 refresh_current_view_range(date, od_value); 
+		} else {
+		}
     }
   
-  public void CreateNewSeries() {
-      String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);
-      // create a new series of data
-      TimeSeries series = new TimeSeries(seriesTitle);
-     // XYSeries series = new XYSeries(seriesTitle);
-      mDataset.addSeries(series);
-      mCurrentSeries = series;
-      // create a new renderer for the new series
-      XYSeriesRenderer renderer = new XYSeriesRenderer();
-      mRenderer.addSeriesRenderer(renderer);
-      // set some renderer properties
-      renderer.setColor(Color.argb(255, 0, 255, 0));
-      renderer.setPointStyle(PointStyle.CIRCLE);
-      renderer.setFillPoints(true);
-      renderer.setDisplayChartValues(true);
-     // renderer.setDisplayChartValuesDistance(10);
-      mCurrentRenderer = renderer;
-    //  mChartView.repaint();
-  }
-
-  @Override
-  protected void onResume() {
-	  Log.d(Tag, "on Resume");
-      super.onResume();
-      if (mChartView == null) {
-          LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-          mChartView = ChartFactory.getTimeChartView(this, mDataset, mRenderer, "h:mm:ss a");
-          //mChartView = ChartFactory.getLineChartView(this, mDataset, mRenderer);
-          // enable the chart click events
-          mRenderer.setClickEnabled(true);
-          mRenderer.setSelectableBuffer(10);
-          mChartView.setOnClickListener(new View.OnClickListener() {
-          public void onClick(View v) {
-          // handle the click event on the chart
-              SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
-              if (seriesSelection == null) {
-                  Toast.makeText(ODChartBuilder.this, "No chart element", Toast.LENGTH_SHORT).show();
-              } else {
-                  // display information of the clicked point
-                  Toast.makeText(
-                      ODChartBuilder.this,
-                      "Chart element in series index " + seriesSelection.getSeriesIndex()
-                      + " data point index " + seriesSelection.getPointIndex() + " was clicked"
-                      + " closest point value X=" + seriesSelection.getXValue() + ", Y="
-                      + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();
-              }
-          }
-          });
-        layout.addView(mChartView, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-        boolean enabled = mDataset.getSeriesCount() > 0;
-      } else {
-        mChartView.repaint();
+    public void CreateNewSeries() {
+        String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);
+        // create a new series of data
+        TimeSeries series = new TimeSeries(seriesTitle);
+        // XYSeries series = new XYSeries(seriesTitle);
+        mDataset.addSeries(series);
+        mCurrentSeries = series;
+        // create a new renderer for the new series
+        XYSeriesRenderer renderer = new XYSeriesRenderer();
+        mRenderer.addSeriesRenderer(renderer);
+        // set some renderer properties
+        renderer.setColor(Color.argb(255, 0, 255, 0));
+        renderer.setPointStyle(PointStyle.CIRCLE);
+        renderer.setFillPoints(true);
+        renderer.setDisplayChartValues(true);
+        // renderer.setDisplayChartValuesDistance(10);
+        mCurrentRenderer = renderer;
+        //  mChartView.repaint();
     }
-  }
+
+    @Override
+    protected void onResume() {
+	    Log.d(Tag, "on Resume");
+        super.onResume();
+        if (mChartView == null) {
+            LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+            mChartView = ChartFactory.getTimeChartView(this, mDataset, mRenderer, "h:mm:ss a");
+            //mChartView = ChartFactory.getLineChartView(this, mDataset, mRenderer);
+            // enable the chart click events
+            mRenderer.setClickEnabled(true);
+            mRenderer.setSelectableBuffer(10);
+            mChartView.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+            // handle the click event on the chart
+                SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
+                if (seriesSelection == null) {
+                    Toast.makeText(ODChartBuilder.this, "No chart element", Toast.LENGTH_SHORT).show();
+                } else {
+                    // display information of the clicked point
+                    Toast.makeText(
+                        ODChartBuilder.this,
+                        "Chart element in series index " + seriesSelection.getSeriesIndex()
+                        + " data point index " + seriesSelection.getPointIndex() + " was clicked"
+                        + " closest point value X=" + seriesSelection.getXValue() + ", Y="
+                        + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            });
+          layout.addView(mChartView, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+          boolean enabled = mDataset.getSeriesCount() > 0;
+        } else {
+          mChartView.repaint();
+        }
+    }
   
     @Override
     public void onPause() {

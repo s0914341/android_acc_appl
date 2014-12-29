@@ -25,7 +25,9 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import ODMonitor.App.R.drawable;
 import ODMonitor.App.data.android_accessory_packet;
 import ODMonitor.App.data.chart_display_data;
+import ODMonitor.App.data.experiment_script_data;
 import ODMonitor.App.data.machine_information;
+import ODMonitor.App.data.sync_data;
 import ODMonitor.App.file.file_operate_byte_array;
 import ODMonitor.App.file.file_operation;
 import android.annotation.SuppressLint;
@@ -116,6 +118,8 @@ public class ODMonitorActivity extends Activity{
     
     public TextView textView2;
     public ProgressDialog mypDialog;
+    public sync_data sync_get_experiment;
+    public sync_data sync_chart_notify;
     
 	/** Called when the activity is first created. */
     @Override
@@ -159,6 +163,7 @@ public class ODMonitorActivity extends Activity{
 		mypDialog.setIndeterminate(true);
 		mypDialog.setCancelable(false);
 		sync_object = new Object();
+		sync_chart_notify = new sync_data();
                
         button1 = (ImageButton) findViewById(R.id.Button1);
         button1.setOnClickListener(new View.OnClickListener() {
@@ -181,17 +186,7 @@ public class ODMonitorActivity extends Activity{
         button2 = (ImageButton) findViewById(R.id.Button2);
         button2.setOnClickListener(new View.OnClickListener() {		
 			public void onClick(View v) {
-        		file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
-        		try {
-        			write_file.delete_file(write_file.generate_filename_no_date());
-        		} catch (IOException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        		byte[] data = new byte[1];
-        		data[0] = 0;
-        		get_experiment_data_start = 1;
-        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA, android_accessory_packet.STATUS_OK, data, 0);
+				new Thread(new get_experiment_task()).start();
 			}
 		});
         
@@ -281,6 +276,38 @@ public class ODMonitorActivity extends Activity{
         registerReceiver(mUsbReceiver, filter);*/
     }
     
+    public void get_experiment_data(boolean delete_file, boolean block) {
+    	if (true == delete_file) {
+    	    file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
+		    try {
+			    write_file.delete_file(write_file.generate_filename_no_date());
+		    } catch (IOException e) {
+			    // TODO Auto-generated catch block
+			    e.printStackTrace();
+		    }
+    	}
+    	
+    	int address = 0;
+    	do {
+    		address += sync_get_experiment.get_meta_data();
+    	    byte[] data = android_accessory_packet.set_file_struct(address);
+		  //  get_experiment_data_start = 1;
+		    WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA, android_accessory_packet.STATUS_START, data, android_accessory_packet.GET_FILE_STRUCT_SIZE);
+		
+		    if (false == block)
+			    return;
+		
+		    synchronized (sync_get_experiment) {
+		        try {
+		    	    sync_get_experiment.wait();
+			    } catch (InterruptedException e) {
+				    // TODO Auto-generated catch block
+				    e.printStackTrace();
+			    }
+		    }
+    	} while (sync_data.STATUS_END != sync_get_experiment.get_status());
+    }
+    
     public void get_machine_information(boolean block) {
 		byte[] data = new byte[1];
 		data[0] = 0;
@@ -335,6 +362,7 @@ public class ODMonitorActivity extends Activity{
     	Intent intent = null;
     	//intent = mCharts[0].execute(this);
     	intent = new Intent(this, ODChartBuilder.class);
+    	intent.putExtra("sync chart notify", sync_chart_notify); 
     	
     	startActivity(intent);
     }
@@ -420,13 +448,13 @@ public class ODMonitorActivity extends Activity{
     public void onPause() {
     	Log.d(Tag, "on Pause");
     	super.onPause();
-    	CloseAccessory();
+    	//CloseAccessory();
     }
     
 	@Override
 	public void onDestroy() {
 		/* when tablet rotate , it will exec onCreate again */
-		//CloseAccessory();
+		CloseAccessory();
 		unregisterReceiver(mUsbReceiver);
 		Log.d(Tag, "on Destory");
 		super.onDestroy();
@@ -434,8 +462,15 @@ public class ODMonitorActivity extends Activity{
 	
 	class initial_task implements Runnable {
 		public void run() {	
+			get_experiment_data(true, true);
 			get_machine_information(true);
 			set_tablet_on_off_line((byte)1, true);
+	    } 	
+	}
+	
+	class get_experiment_task implements Runnable {
+		public void run() {	
+			get_experiment_data(true, true);
 	    } 	
 	}
 
@@ -456,12 +491,11 @@ public class ODMonitorActivity extends Activity{
 			}
 		}
 		
-		//if (handlerThread == null) {
-		    handlerThread = new handler_thread(handler, inputstream);
-		    handlerThread.start();
-		//}
+		handlerThread = new handler_thread(handler, inputstream);
+		handlerThread.start();
 		connect_status.setEnabled(true);
 		mypDialog.show();
+		sync_get_experiment = new sync_data();
 		new Thread(new initial_task()).start();
 		
 	} /*end OpenAccessory*/
@@ -472,43 +506,50 @@ public class ODMonitorActivity extends Activity{
 		byte[] byte_str = new byte[rec.get_Len_value()];
     	System.arraycopy(rec.buffer, android_accessory_packet.DATA_START, byte_str, 0, rec.get_Len_value());
     	String str = new String(byte_str);
+    	
     	try {
- 	        long size = read_file.open_read_file(read_file.generate_filename_no_date());
- 	        if (size <= 0)
- 	        	return;
- 	        
- 	        read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size)+4);
- 	      //  byte[] final_pre_raw_index_bytes = new byte[4];
- 	        byte[] final_current_raw_index_bytes = new byte[4];
- 	      //  read_file.read_file(final_pre_raw_index_bytes);
- 	        read_file.read_file(final_current_raw_index_bytes);
- 	      //  ByteBuffer byte_buffer = ByteBuffer.wrap(final_pre_raw_index_bytes, 0, 4);
-   		    //byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
-          //  int final_pre_raw_index = byte_buffer.getInt();
- 	        ByteBuffer byte_buffer = ByteBuffer.wrap(final_current_raw_index_bytes, 0, 4);
-            byte_buffer = ByteBuffer.wrap(final_current_raw_index_bytes, 0, 4);
-   		    //byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
-            int final_current_raw_index = byte_buffer.getInt();
-            
-            int[] data = null;
-	        data = OD_calculate.parse_raw_data(str);
-	        if (data != null) {
-	        	if (final_current_raw_index == data[OD_calculate.pre_raw_index_index]) {
-	        		try {
-	            		write_file.create_file(write_file.generate_filename_no_date());
-	            		ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);        
-	                    IntBuffer intBuffer = byteBuffer.asIntBuffer();
-	                    intBuffer.put(data);
-	                    byte[] data_bytes = byteBuffer.array();
-	            		write_file.write_file(data_bytes);
-	            		write_file.flush_close_file();
-	            		shaker_return.setText(str);
-	        		} catch (IOException e) {
-	        			// TODO Auto-generated catch block
-	        			e.printStackTrace();
-	        		}
-	        	}
-	        } 
+    		int[] data = null;
+            data = OD_calculate.parse_raw_data(str);
+            if (data != null) {
+            	if ((0 == data[OD_calculate.pre_raw_index_index]) && (0 == data[OD_calculate.current_raw_index_index])) {
+            		read_file.delete_file(read_file.generate_filename_no_date());
+            	} else {
+            		long size = read_file.open_read_file(read_file.generate_filename_no_date());
+         	        if (size <= 0)
+         	        	return;
+         	        
+         	        read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size)+4);
+        	        byte[] final_current_raw_index_bytes = new byte[4];
+        	        read_file.read_file(final_current_raw_index_bytes);
+        	        ByteBuffer byte_buffer = ByteBuffer.wrap(final_current_raw_index_bytes, 0, 4);
+                    byte_buffer = ByteBuffer.wrap(final_current_raw_index_bytes, 0, 4);
+                    int final_current_raw_index = byte_buffer.getInt();
+                    
+                    if (final_current_raw_index != data[OD_calculate.pre_raw_index_index]) {
+                        return;
+    	        	}
+            	}
+            	
+            	try {
+            		write_file.create_file(write_file.generate_filename_no_date());
+            		ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);        
+                    IntBuffer intBuffer = byteBuffer.asIntBuffer();
+                    intBuffer.put(data);
+                    byte[] data_bytes = byteBuffer.array();
+            		write_file.write_file(data_bytes);
+            		write_file.flush_close_file();
+            		shaker_return.setText(str);
+            		if (sync_chart_notify != null) {
+                	    synchronized (sync_chart_notify) {
+                	    	sync_chart_notify.notify();
+                	    }
+                	}
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        			return;
+        		}
+            }
          } catch (IOException e) {
  	        // TODO Auto-generated catch block
  	        e.printStackTrace();
@@ -576,7 +617,7 @@ public class ODMonitorActivity extends Activity{
     	}
 	}
 	
-	public void convert__string_to_byte_file() {
+	public void convert_string_to_byte_file() {
 		file_operation read_file = new file_operation("od_sensor", "sensor_offline", true);
         try {
 	        read_file.open_read_file(read_file.generate_filename_no_date());
@@ -585,8 +626,9 @@ public class ODMonitorActivity extends Activity{
 	        e.printStackTrace();
         }
         
-        file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
+        file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", false);
     	try {
+    	//	write_file.delete_file(write_file.generate_filename_no_date());
             write_file.create_file(write_file.generate_filename_no_date());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -655,32 +697,56 @@ public class ODMonitorActivity extends Activity{
     		    } break;
     			
     		    case android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA:
-    		    	if (1 == get_experiment_data_start) {
-    		    	    int len = handle_receive_data.get_Len_value();
-    		    		byte[] experiment_data = new byte[len];
-        		    	System.arraycopy(handle_receive_data.buffer, handle_receive_data.DATA_START, experiment_data, 0, len); 
-        		    	//String debug_str;
-        		    	//debug_str = String.format("prefix:%d, type:%d, status:%d, len:%d", handle_receive_data.get_Prefix_value(),
-        		    	//   		handle_receive_data.get_Type_value(), handle_receive_data.get_Status_value(), handle_receive_data.get_Len_value());
-        		    	//debug_view.setText(debug_str);
-        		    	//String experiment_str = new String(experiment_data);
-        		    	file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
-        		    	try {
-        		            write_file.create_file(write_file.generate_filename_no_date());
-        		    		write_file.write_file(experiment_data);
-        		    		write_file.flush_close_file();
-        				} catch (IOException e) {
-        					// TODO Auto-generated catch block
-        					e.printStackTrace();
-        				}
+    		    	//if (1 == get_experiment_data_start) {
+    		    		if (android_accessory_packet.STATUS_FAIL == handle_receive_data.get_Status_value()) {
+    		    		    get_experiment_data_start = 0;
+        		    		Toast.makeText(ODMonitorActivity.this, "Get experiment data fail", Toast.LENGTH_SHORT).show(); 
+        		    		if (sync_get_experiment != null) {
+    		        	        synchronized (sync_get_experiment) {
+    		        	        	sync_get_experiment.set_status(sync_data.STATUS_END);
+    		        	        	sync_get_experiment.notify();
+    		        	        }
+    		        	    }
+    		    		} else {
+    		    	        int len = handle_receive_data.get_Len_value();
+    		    		    byte[] experiment_data = new byte[len];
+        		    	    System.arraycopy(handle_receive_data.buffer, handle_receive_data.DATA_START, experiment_data, 0, len); 
+        		            //String debug_str;
+        		    	    //debug_str = String.format("prefix:%d, type:%d, status:%d, len:%d", handle_receive_data.get_Prefix_value(),
+        		    	    //   		handle_receive_data.get_Type_value(), handle_receive_data.get_Status_value(), handle_receive_data.get_Len_value());
+        		    	    //debug_view.setText(debug_str);
+        		    	    //String experiment_str = new String(experiment_data);
+        		    	    file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
+        		     	    try {
+        		                write_file.create_file(write_file.generate_filename_no_date());
+        		    		    write_file.write_file(experiment_data);
+        		    		    write_file.flush_close_file();
+        				    } catch (IOException e) {
+        					    // TODO Auto-generated catch block
+        					    e.printStackTrace();
+        				    }
         		    	
-        		    	if (android_accessory_packet.STATUS_OK == handle_receive_data.get_Status_value()) {
-        		    		get_experiment_data_start = 0;
-        		    		convert__string_to_byte_file();
-        		    		Toast.makeText(ODMonitorActivity.this, "Get experiment data complete", Toast.LENGTH_SHORT).show(); 
-        		    	}
-    		    	
-    		    	}		    	
+        		    	    if (android_accessory_packet.STATUS_OK == handle_receive_data.get_Status_value()) {
+        		    		    get_experiment_data_start = 0;
+        		    		    convert_string_to_byte_file();
+        		    		    Toast.makeText(ODMonitorActivity.this, "Get experiment data complete", Toast.LENGTH_SHORT).show(); 
+        		    		    if (sync_get_experiment != null) {
+        		        	        synchronized (sync_get_experiment) {
+        		        	        	sync_get_experiment.set_status(sync_data.STATUS_END);
+        		        	        	sync_get_experiment.notify();
+        		        	        }
+        		        	    }
+        		    	    } else if (android_accessory_packet.STATUS_HAVE_DATA == handle_receive_data.get_Status_value()) {
+        		    	    	if (sync_get_experiment != null) {
+        		        	        synchronized (sync_get_experiment) {
+        		        	        	sync_get_experiment.set_meta_data(len);
+        		        	        	sync_get_experiment.set_status(sync_data.STATUS_CONTINUE);
+        		        	        	sync_get_experiment.notify();
+        		        	        }
+        		        	    }	
+        		    	    }
+    		    	    }	
+    		    //	}
         		break;
         		
     		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_SCRIPT:

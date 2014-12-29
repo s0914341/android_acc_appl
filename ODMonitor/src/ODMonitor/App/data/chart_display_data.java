@@ -43,6 +43,18 @@ public class chart_display_data implements Serializable{
 		return concentration;
 	}
 	
+	public void set_index_value(long data) {
+		index = data;
+	}
+	
+	public void set_date_value(long data) {
+        date = data;;
+	}
+	
+	public void set_concentration_value(double data) {
+		concentration = data;
+	}
+	
 	public static int get_total_length() {
 		return total_length;
 	}
