@@ -2,11 +2,7 @@ package ODMonitor.App.data;
 
 import java.io.Serializable;
 
-public class sync_data  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6964133448688855093L;
+public class sync_data{
 	public static final int STATUS_END = 1;
 	public static final int STATUS_CONTINUE = 2;
 	

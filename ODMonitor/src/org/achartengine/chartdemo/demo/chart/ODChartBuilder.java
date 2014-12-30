@@ -32,11 +32,13 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
 import ODMonitor.App.ODMonitorActivity;
+import ODMonitor.App.ODMonitor_Application;
 import ODMonitor.App.OD_calculate;
 import ODMonitor.App.R;
 import ODMonitor.App.data.android_accessory_packet;
 import ODMonitor.App.data.chart_display_data;
 import ODMonitor.App.data.experiment_script_data;
+import ODMonitor.App.data.machine_information;
 import ODMonitor.App.data.sync_data;
 import ODMonitor.App.file.file_operate_byte_array;
 import ODMonitor.App.file.file_operate_chart;
@@ -53,6 +55,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class ODChartBuilder extends Activity {
@@ -78,6 +81,8 @@ public class ODChartBuilder extends Activity {
   private static final int HOURS = 24;
   
   public sync_data sync_chart_notify;
+  private boolean data_read_thread_run = false;
+  public TextView debug_view;
 
 
   @Override
@@ -109,8 +114,10 @@ public class ODChartBuilder extends Activity {
       getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
       Thread.currentThread().setName("Thread_XYChartBuilder");
       
-      Intent intent = getIntent(); 
-      sync_chart_notify = (sync_data)intent.getSerializableExtra("sync chart notify");
+      debug_view = (TextView)findViewById(R.id.DebugView);
+      
+      ODMonitor_Application app_data = ((ODMonitor_Application)this.getApplication());
+	  sync_chart_notify = app_data.get_sync_chart_notify();
       // set some properties on the main renderer
       mRenderer.setApplyBackgroundColor(true);
       mRenderer.setBackgroundColor(Color.argb(100, 50, 50, 50));
@@ -128,7 +135,9 @@ public class ODChartBuilder extends Activity {
       mRenderer.setPointSize(5);
     
       init_time_series();
+      //read_thread();
       data_read_thread = new data_read_thread(handler);
+      data_read_thread_run = true;
       data_read_thread.start();
   }
   
@@ -156,6 +165,9 @@ public class ODChartBuilder extends Activity {
   final Handler handler =  new Handler() {
   	@Override 
   	public void handleMessage(Message msg) {
+  		int current_index = msg.getData().getInt("current_raw_index");
+  		int pre_index = msg.getData().getInt("new_pre_raw_index");
+    	
   		chart_display_data objectRcvd = (chart_display_data)msg.getData().getSerializable("chart");
   		
   		if (objectRcvd.get_index_value() == 0) {
@@ -165,10 +177,14 @@ public class ODChartBuilder extends Activity {
   		} else {
   		    SerialAdd(new Date(objectRcvd.get_date_value()), objectRcvd.get_concentration_value());
   		}
+  		
+  		String str = String.format("handler test current_index:%d, new pre index:%d, concentration:%f", current_index, pre_index, objectRcvd.get_concentration_value());
+    	debug_view.setText(str);
   	
-		Log.d("EXPERIMENT", "data_read_thread handler");
+		Log.d(Tag, "data_read_thread handler id:"+Thread.currentThread().getId() + "process:" + android.os.Process.myTid());
   	}
   };
+  
   
   private class data_read_thread  extends Thread {
 		Handler mHandler;
@@ -182,7 +198,8 @@ public class ODChartBuilder extends Activity {
 			Bundle b = new Bundle(1);
 			long size = 0;
 			
-			while(true) {
+			while (data_read_thread_run) {
+				Log.d(Tag, "data_read_thread  id:"+Thread.currentThread().getId() + "process:" + android.os.Process.myTid());
 				synchronized (sync_chart_notify) {
 				    try {
 				    	sync_chart_notify.wait();
@@ -209,6 +226,12 @@ public class ODChartBuilder extends Activity {
 		        
                 if (new_pre_raw_index == current_raw_index) {
                 	double od_value = 0;
+                	try {
+    		        	size = read_file.open_read_file(read_file.generate_filename_no_date());
+    		        } catch (IOException e) {
+    			        // TODO Auto-generated catch block
+    			        e.printStackTrace();
+    		        }
                 	read_file.seek_read_file(0);
                 	byte[] experiment_start_ms_bytes = new byte[8];
                 	read_file.read_file(experiment_start_ms_bytes);
@@ -218,26 +241,29 @@ public class ODChartBuilder extends Activity {
          			long experiment_start_ms = byte_buffer.getLong();
                 	
                 	
+         			try {
+    		        	size = read_file.open_read_file(read_file.generate_filename_no_date());
+    		        } catch (IOException e) {
+    			        // TODO Auto-generated catch block
+    			        e.printStackTrace();
+    		        }
                 	byte[] data = new byte[4*OD_calculate.experiment_data_size];
                 	read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size));
                 	read_file.read_file(data);
                 	
-                	
-                	int[] channel_data = new int[OD_calculate.total_sensor_channel];
-   				    byte_buffer = ByteBuffer.wrap(data, OD_calculate.current_raw_index_index*4, 4);
+   				    byte_buffer = ByteBuffer.wrap(data, 4*OD_calculate.current_raw_index_index, 4);
    				    current_raw_index = byte_buffer.getInt();
-   				 
    				
    				    byte_buffer = ByteBuffer.wrap(data, 4*OD_calculate.experiment_seconds_index, 4);
    				    long elapsed_time = (long)(byte_buffer.getInt()*1000);
    				    Date date = new Date(experiment_start_ms + elapsed_time);	 
   
-   				 
    				    byte_buffer = ByteBuffer.wrap(data, 4*OD_calculate.sensor_index_index, 4);
    				    current_index = byte_buffer.getInt();
    			
+   				    int[] channel_data = new int[OD_calculate.total_sensor_channel];
    				    for (int i = 0; i < OD_calculate.total_sensor_channel; i++) {
-   		        	    byte_buffer = ByteBuffer.wrap(data, 4*(OD_calculate.sensor_ch1_index+1), 4);
+   		        	    byte_buffer = ByteBuffer.wrap(data, 4*(OD_calculate.sensor_ch1_index+i), 4);
    		        	    channel_data[i] = byte_buffer.getInt();
    				    }
    				 
@@ -253,6 +279,8 @@ public class ODChartBuilder extends Activity {
    		            chart_data.set_date_value(experiment_start_ms + elapsed_time);
    		            chart_data.set_concentration_value(od_value);
    		            b.putSerializable("chart", chart_data);
+   		            b.putInt("current_raw_index", current_raw_index);
+		            b.putInt("new_pre_raw_index", new_pre_raw_index);
 		            msg.setData(b);
  	                mHandler.sendMessage(msg);
    			      //  mCurrentSeries.add(date, od_value);
@@ -421,13 +449,6 @@ public class ODChartBuilder extends Activity {
         } catch (IOException e) {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
-	      /*  read_file = new file_operation("od_sensor", "sensor_offline", true);
-	        try {
-				read_file.open_read_file(read_file.generate_filename_no_date());
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}*/
         }
         
         if (size >= 8) {
@@ -436,17 +457,15 @@ public class ODChartBuilder extends Activity {
 		    
 		    read_file.read_file(data);
 		    
-		    byte[] experiment_start_ms_bytes = new byte[8];
-		    System.arraycopy(data, 0, experiment_start_ms_bytes, 0, 8);
-		    offset += 8;
-			ByteBuffer byte_buffer = ByteBuffer.wrap(experiment_start_ms_bytes, 0, 8);
+			ByteBuffer byte_buffer = ByteBuffer.wrap(data, offset, 8);
+			offset += 8;
 			//byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
 			experiment_start_ms = byte_buffer.getLong();
 			
 			while (size-offset >= (OD_calculate.experiment_data_size*4)) {
 				 int[] channel_data = new int[OD_calculate.total_sensor_channel];
-				 byte_buffer = ByteBuffer.wrap(data, offset, 4);
 				 offset += OD_calculate.current_raw_index_index*4;
+				 byte_buffer = ByteBuffer.wrap(data, offset, 4);
 				 current_raw_index = byte_buffer.getInt();
 				 
 				 offset += (OD_calculate.experiment_seconds_index - OD_calculate.current_raw_index_index) *4;
@@ -540,6 +559,7 @@ public class ODChartBuilder extends Activity {
     @Override
     public void onPause() {
   	    Log.d(Tag, "on Pause");
+  	    data_read_thread_run = false;
   	    super.onPause();
     }
   

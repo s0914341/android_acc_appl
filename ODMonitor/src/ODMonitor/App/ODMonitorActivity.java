@@ -112,7 +112,7 @@ public class ODMonitorActivity extends Activity{
     final Context context = this;
     
     /*thread to listen USB data*/
-    public handler_thread handlerThread;
+    public aoa_thread handlerThread;
     public data_write_thread data_write_thread;
     public Object sync_object;
     
@@ -120,6 +120,7 @@ public class ODMonitorActivity extends Activity{
     public ProgressDialog mypDialog;
     public sync_data sync_get_experiment;
     public sync_data sync_chart_notify;
+    private boolean aoa_thread_run = false;
     
 	/** Called when the activity is first created. */
     @Override
@@ -164,22 +165,13 @@ public class ODMonitorActivity extends Activity{
 		mypDialog.setCancelable(false);
 		sync_object = new Object();
 		sync_chart_notify = new sync_data();
+		ODMonitor_Application app_data = ((ODMonitor_Application)this.getApplication());
+		app_data.set_sync_chart_notify(sync_chart_notify);
                
         button1 = (ImageButton) findViewById(R.id.Button1);
         button1.setOnClickListener(new View.OnClickListener() {
         	public void onClick(View v) {
-        		file_operation write_file = new file_operation("od_sensor", "sensor_online", true);
-        		try {
-        			write_file.delete_file(write_file.generate_filename_no_date());
-        		} catch (IOException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        		byte[] data = new byte[9];
-        		data[0] = android_accessory_packet.STATUS_EXPERIMENT_START;
-        		byte[] start_time_bytes = ByteBuffer.allocate(8).putLong(new Date().getTime()).array();
-        		System.arraycopy(start_time_bytes, 0, data, 1, 8);
-        		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS, android_accessory_packet.STATUS_OK, data, 9);
+        		start_experiment();
         	}
 		});
         
@@ -276,6 +268,31 @@ public class ODMonitorActivity extends Activity{
         registerReceiver(mUsbReceiver, filter);*/
     }
     
+    public void start_experiment() {
+    	file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
+		try {
+			write_file.delete_file(write_file.generate_filename_no_date());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		byte[] data = new byte[9];
+		data[0] = android_accessory_packet.STATUS_EXPERIMENT_START;
+		// get current time data and write to file
+		byte[] start_time_bytes = ByteBuffer.allocate(8).putLong(new Date().getTime()).array();
+		try {
+			write_file.create_file(write_file.generate_filename_no_date());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		write_file.write_file(start_time_bytes);
+		write_file.flush_close_file();
+		System.arraycopy(start_time_bytes, 0, data, 1, 8);
+		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS, android_accessory_packet.STATUS_OK, data, 9);
+    }
+    
     public void get_experiment_data(boolean delete_file, boolean block) {
     	if (true == delete_file) {
     	    file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline", true);
@@ -362,8 +379,6 @@ public class ODMonitorActivity extends Activity{
     	Intent intent = null;
     	//intent = mCharts[0].execute(this);
     	intent = new Intent(this, ODChartBuilder.class);
-    	intent.putExtra("sync chart notify", sync_chart_notify); 
-    	
     	startActivity(intent);
     }
     
@@ -491,7 +506,8 @@ public class ODMonitorActivity extends Activity{
 			}
 		}
 		
-		handlerThread = new handler_thread(handler, inputstream);
+		handlerThread = new aoa_thread(handler, inputstream);
+		aoa_thread_run = true;
 		handlerThread.start();
 		connect_status.setEnabled(true);
 		mypDialog.show();
@@ -511,13 +527,11 @@ public class ODMonitorActivity extends Activity{
     		int[] data = null;
             data = OD_calculate.parse_raw_data(str);
             if (data != null) {
-            	if ((0 == data[OD_calculate.pre_raw_index_index]) && (0 == data[OD_calculate.current_raw_index_index])) {
-            		read_file.delete_file(read_file.generate_filename_no_date());
-            	} else {
-            		long size = read_file.open_read_file(read_file.generate_filename_no_date());
-         	        if (size <= 0)
-         	        	return;
-         	        
+            	long size = read_file.open_read_file(read_file.generate_filename_no_date());
+         	    if (size <= 0)
+         	        return;
+         	    
+         	    if (size >= (4*OD_calculate.experiment_data_size)+8) {
          	        read_file.seek_read_file(size-(long)(4*OD_calculate.experiment_data_size)+4);
         	        byte[] final_current_raw_index_bytes = new byte[4];
         	        read_file.read_file(final_current_raw_index_bytes);
@@ -527,8 +541,11 @@ public class ODMonitorActivity extends Activity{
                     
                     if (final_current_raw_index != data[OD_calculate.pre_raw_index_index]) {
                         return;
-    	        	}
-            	}
+    	            }
+         	    } else {
+         	    	if ((data[OD_calculate.current_raw_index_index] != 0) || (data[OD_calculate.pre_raw_index_index] != 0))
+         	    		return;
+         	    }
             	
             	try {
             		write_file.create_file(write_file.generate_filename_no_date());
@@ -539,6 +556,7 @@ public class ODMonitorActivity extends Activity{
             		write_file.write_file(data_bytes);
             		write_file.flush_close_file();
             		shaker_return.setText(str);
+            		// notify ODChartBuilder object has new sensor to display
             		if (sync_chart_notify != null) {
                 	    synchronized (sync_chart_notify) {
                 	    	sync_chart_notify.notify();
@@ -671,12 +689,17 @@ public class ODMonitorActivity extends Activity{
 	final Handler handler =  new Handler() {
     	@SuppressLint("DefaultLocale") @Override 
     	public void handleMessage(Message msg) {	
+    		String view_str = msg.getData().getString("aoa thread exception", "no exception");
+    		if (true == view_str.equals("aoa thread exception"))
+			    debug_view.setText(view_str);
+    		
     		Bundle b = msg.getData();
     		android_accessory_packet handle_receive_data = new android_accessory_packet(android_accessory_packet.NO_INIT_PREFIX_VALUE);
     		byte[] recv = b.getByteArray(android_accessory_packet.key_receive);
     		
+    		Log.d(Tag, "Handler  id:"+Thread.currentThread().getId() + "process:" + android.os.Process.myTid());
+    			
     		handle_receive_data.copy_to_buffer(recv, android_accessory_packet.get_size());
-    		
     		switch (handle_receive_data.get_Type_value()) {
     		    case android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS: {
     		    	machine_information info = new machine_information();
@@ -797,11 +820,11 @@ public class ODMonitorActivity extends Activity{
     	}
     };
 	
-	private class handler_thread  extends Thread {
+	private class aoa_thread  extends Thread {
 		Handler mHandler;
 		FileInputStream instream;
 		
-		handler_thread(Handler h,FileInputStream stream ){
+		aoa_thread(Handler h, FileInputStream stream ) {
 			mHandler = h;
 			instream = stream;
 		}
@@ -817,10 +840,8 @@ public class ODMonitorActivity extends Activity{
 			Bundle b = new Bundle(3);
 			int read_offset = 0;
 			int receive_data_index = 0;
-			boolean running = true;
 			
-			while(running) {
-				Message msg = mHandler.obtainMessage();
+			while(aoa_thread_run) {
 				try {
 					if (instream != null) {	
 					    readcount = instream.read(receive_data[receive_data_index].buffer, read_offset, android_accessory_packet.get_size());
@@ -828,9 +849,10 @@ public class ODMonitorActivity extends Activity{
 					        read_offset += readcount;
 					        if (android_accessory_packet.PREFIX_VALUE == receive_data[receive_data_index].get_Prefix_value()) {
 					        	if (read_offset >= android_accessory_packet.HEADER_SIZE) {
-					        		/* prefix match , set read data length */
+					        		// prefix match , set read data length
 					        	    if ((android_accessory_packet.HEADER_SIZE+receive_data[receive_data_index].get_Len_value()) <= read_offset) {
 									    read_offset = 0;
+									    Message msg = mHandler.obtainMessage();
 									    b.putByteArray(android_accessory_packet.key_receive, receive_data[receive_data_index].buffer);
 									    msg.setData(b);
 									    mHandler.sendMessage(msg);
@@ -841,13 +863,17 @@ public class ODMonitorActivity extends Activity{
 					        	    }
 					            }
 					        } else {
-					        	/* prefix value is not correct, throw this data */
+					        	// prefix value is not correct, throw this data
 					            read_offset = 0;
 					        }
 					    }
 					}
 				} catch (IOException e){
-					running = false;
+					aoa_thread_run = false;
+					Message msg = mHandler.obtainMessage();
+				    b.putString("aoa thread exception", "aoa thread exception");
+				    msg.setData(b);
+				    mHandler.sendMessage(msg);
 				}
 			}
 		}
