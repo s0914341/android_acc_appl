@@ -65,8 +65,6 @@ public class script_activity_list extends Activity {
 	
 	private final static int SCRIPT_HEADER_SIZE = 5;
 	private final static byte SCRIPT_HEADER = (byte) 0xFF;
-    private String[] mMenuText;
-	private String[] mMenuSummary;
 	List<HashMap<String,Object>> list = new ArrayList<HashMap<String,Object>>();
 	public HashMap<Object, Object> experiment_item = new HashMap<Object, Object>();
 	public SimpleAdapter adapter;
@@ -83,24 +81,6 @@ public class script_activity_list extends Activity {
     };
 	
 	/** Called when the activity is first created. */
-	
-	class long_press_task extends TimerTask {
-		int position; 
-		Point cur_Point; 
-		Point st_Point;
-		
-		public long_press_task(int position1, Point currentPoint, Point start_Point) {
-			position = position1;
-			cur_Point = currentPoint;
-			st_Point = start_Point;
-	    }
-		
-        @Override
-        public void run() {
-        	Log.d(Tag, "long_press_task position = " + position);
-        		
-        }
-   };
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -472,18 +452,6 @@ public class script_activity_list extends Activity {
 	  //  text.setText(String.format("Selected %s for item %s", menuItemName, listItemName));
         Log.d(Tag, "onContextItemSelected position = " + position);
 	    return true;
-	}
-	
-	private List<Map<String, String>> getListValues() {
-	    List<Map<String, String>> values = new ArrayList<Map<String, String>>();
-	    int length = mMenuText.length;
-	    for (int i = 0; i < length; i++) {
-	      Map<String, String> v = new HashMap<String, String>();
-	      v.put(IDemoChart.NAME, mMenuText[i]);
-	      v.put(IDemoChart.DESC, mMenuSummary[i]);
-	      values.add(v);
-	    }
-	    return values;
 	}
 	
 	public void show_script_setting_dialog(long id, int position) {

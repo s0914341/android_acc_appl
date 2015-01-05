@@ -15,6 +15,7 @@
  */
 package org.achartengine.chartdemo.demo.chart;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -45,6 +46,7 @@ import ODMonitor.App.file.file_operate_chart;
 import ODMonitor.App.file.file_operation;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -182,6 +184,23 @@ public class ODChartBuilder extends Activity {
     	debug_view.setText(str);
   	
 		Log.d(Tag, "data_read_thread handler id:"+Thread.currentThread().getId() + "process:" + android.os.Process.myTid());
+		
+		FileOutputStream out = null;
+		 try {
+		     out = new FileOutputStream("/sdcard/chart.png");
+		     mChartView.toBitmap().compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+		     // PNG is a lossless format, the compression factor (100) is ignored
+		 } catch (Exception e) {
+		     e.printStackTrace();
+		 } finally {
+		     try {
+		         if (out != null) {
+		             out.close();
+		         }
+		     } catch (IOException e) {
+		         e.printStackTrace();
+		     }
+		 }
   	}
   };
   
@@ -194,7 +213,6 @@ public class ODChartBuilder extends Activity {
 		}
 		
 		public void run() {
-			long file_len = 0;
 			Bundle b = new Bundle(1);
 			long size = 0;
 			
@@ -283,51 +301,8 @@ public class ODChartBuilder extends Activity {
 		            b.putInt("new_pre_raw_index", new_pre_raw_index);
 		            msg.setData(b);
  	                mHandler.sendMessage(msg);
-   			      //  mCurrentSeries.add(date, od_value);
                 }
 			}
-			/*	try {
-					file_len = read_file.open_read_file(read_file.generate_filename_no_date());
-					if (file_len > 0) {
-						byte[] read_buf = new byte[(int)file_len];
-						read_file.read_file(read_buf);
-					    chart_display_data chart_data = new chart_display_data();
-					    byte[] chart_temp = new byte[chart_display_data.get_total_length()];
-					    int offset = 0;
-					    
-					    for (offset = 0; offset < file_len; offset += chart_temp.length) {
-					    	if ((offset + chart_display_data.get_total_length()) <= file_len) {
-					    	    System.arraycopy(read_buf, offset, chart_temp, 0, chart_temp.length);
-					    	    if (0 == chart_data.set_object_buffer(chart_temp)) {
-					    	        if (chart_data.get_index_value() > current_index) {
-					    	    	    Message msg = mHandler.obtainMessage();
-					    	    	    current_index = chart_data.get_index_value();
-					    	            b.putSerializable("chart", chart_data);
-							            msg.setData(b);
-					    	            mHandler.sendMessage(msg);
-					    	            break;
-					    	        }
-					    	    }
-					    	} else
-					    		break;
-					    }
-					} else {
-		    			Log.d("data_read_thread", "open testExperimentData fail");
-		    		}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-	    	    Log.d(Tag, "data_read_thread");
-	    	    
-	    	    try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}*/
 		}
 	}
   

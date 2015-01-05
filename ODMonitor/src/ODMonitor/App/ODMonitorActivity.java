@@ -70,7 +70,7 @@ import android.widget.Toast;
 
 public class ODMonitorActivity extends Activity{
 	public String Tag = "ODMonitorActivity";
-	private static final String ACTION_USB_PERMISSION = "FTDI.LED.USB_PERMISSION";
+	private static final String ACTION_USB_PERMISSION = "OD.MONITOR.USB_PERMISSION";
 	public UsbManager usbmanager;
 	public UsbAccessory usbaccessory;
 	public PendingIntent mPermissionIntent;
@@ -79,6 +79,7 @@ public class ODMonitorActivity extends Activity{
 	public FileOutputStream outputstream = null;
 	public boolean mPermissionRequestPending = true;
 	
+	public static final long WAIT_TIMEOUT = 3000;
 	public byte  ledPrevMap = 0x00;
 	//public byte[] usbdataIN;
 	public android_accessory_packet acc_pkg_transfer = new android_accessory_packet(android_accessory_packet.INIT_PREFIX_VALUE);
