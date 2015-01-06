@@ -18,7 +18,7 @@ public class file_operation {
 	private String Tag = "file_operation";
 	public File sdcard = Environment.getExternalStorageDirectory();
 	private String file_Dir = sdcard.getPath() + "/"; 
-	private String CreateFileName = "Default";
+	protected String CreateFileName = "Default";
 	protected File file_MetaData;
 	protected File file;
 	private BufferedWriter file_buf;

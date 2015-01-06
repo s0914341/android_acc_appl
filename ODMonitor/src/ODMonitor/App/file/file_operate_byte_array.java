@@ -62,7 +62,7 @@ public class file_operate_byte_array extends file_operation {
 	    return ret;
 	}
 	
-	public void write_file(byte[] data) {
+	public final void write_file(byte[] data) {
 		if (fos != null) {
 			try {
 				fos.write(data);
@@ -73,7 +73,7 @@ public class file_operate_byte_array extends file_operation {
 		}
 	}
 	
-	public void read_file(byte[] data) {
+	public final void read_file(byte[] data) {
 		if (fis != null) {
 			try {
 				fis.read(data);

@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_gravity="center"
-    android:background="#66666666"
+<android.support.v4.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/laySwipe"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"> 
+        
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#33333333"
     android:orientation="vertical"
     android:focusable="true"
-    android:focusableInTouchMode="true"
-    android:padding="5dp" >
+    android:focusableInTouchMode="true" >
 
     <RelativeLayout  
         	android:layout_height="250dp" 
         	android:id="@+id/frameLayout2" 
         	android:layout_width="match_parent" 
         	android:background="@drawable/border2">
+        	
         	<TextView 
             	android:id="@+id/MachineInformation" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
@@ -25,7 +33,7 @@
             	android:layout_marginTop="10dp"
             	android:textStyle="bold">
             </TextView>
-            
+ 
         	<TextView 
             	android:id="@+id/ViewMassStorage" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
@@ -114,26 +122,13 @@
             	android:layout_alignTop="@+id/SensorStatus" 
             	android:layout_alignBottom="@+id/SensorStatus">
             </ImageView>
-        </RelativeLayout>
+    </RelativeLayout>
     
     <RelativeLayout 
         	android:layout_height="160dp" 
         	android:id="@+id/relativeLayout1" 
         	android:layout_width="fill_parent" 
         	android:background="@drawable/border2">
-        	
-        	<!-- <TextView 
-            	android:id="@+id/textView1" 
-            	android:textAppearance="?android:attr/textAppearanceMedium"
-            	android:layout_width="wrap_content" 
-            	android:layout_height="wrap_content" 
-            	android:layout_alignParentLeft="true" 
-            	android:text="LEDs"
-            	android:layout_marginLeft="25dp"
-            	android:layout_marginTop="20dp"
-            	android:singleLine="true"
-            	android:textStyle="bold">
-            </TextView> -->
         	
         	<TextView 
             	android:id="@+id/textViewButton1" 
@@ -147,7 +142,7 @@
             	android:textStyle="bold">
             </TextView>
             
-        	<TextView 
+        	<!-- <TextView 
             	android:id="@+id/textViewButton2" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
             	android:layout_width="wrap_content" 
@@ -158,17 +153,17 @@
             	android:layout_alignBottom="@+id/textViewButton1"
             	android:text="Get Data"
             	android:textStyle="bold">
-            </TextView>
+            </TextView> -->
             
         	<TextView 
             	android:id="@+id/textViewButton3" 
             	android:textAppearance="?android:attr/textAppearanceMedium"
             	android:layout_width="wrap_content" 
             	android:layout_height="wrap_content" 
-            	android:layout_toRightOf="@+id/textViewButton2" 
+            	android:layout_toRightOf="@+id/textViewButton1" 
             	android:layout_alignLeft="@+id/Button3"
-            	android:layout_alignTop="@+id/textViewButton2" 
-            	android:layout_alignBottom="@+id/textViewButton2"
+            	android:layout_alignTop="@+id/textViewButton1" 
+            	android:layout_alignBottom="@+id/textViewButton1"
             	android:text="Send Script"
             	android:textStyle="bold">
             </TextView>
@@ -199,15 +194,6 @@
             	android:textStyle="bold">
             </TextView>
             
-            <!-- <ImageView  
-            	android:src="@drawable/image0" 
-            	android:id="@+id/LED1"
-            	android:layout_width="50dp"
-            	android:layout_height="50dp" 
-            	android:layout_marginTop="45dp"
-            	android:layout_marginLeft="42dp">
-            </ImageView> -->
-            
             <ImageButton 
                 android:background="@drawable/buttons_start" 
             	android:scaleType="fitCenter" 
@@ -219,29 +205,7 @@
             	android:layout_marginLeft="42dp" android:focusable="true">
             </ImageButton>
             
-            <!-- <ImageView 
-            	android:layout_width="450dp" 
-            	android:layout_height="wrap_content" 
-            	android:background="#FFFFFFFF"
-            	android:src="@drawable/line" 
-            	android:layout_marginTop="110dp"
-            	android:layout_marginLeft="20dp" 
-            	android:id="@+id/line">
-            </ImageView> -->
-            
-            <!-- <ImageView 
-            	android:layout_width="50dp" 
-            	android:src="@drawable/image0" 
-            	android:id="@+id/LED2" 
-            	android:layout_height="50dp" 
-            	android:layout_toRightOf="@+id/LED1" 
-            	android:layout_alignTop="@+id/LED1" 
-            	android:layout_alignBottom="@+id/LED1"
-            	android:layout_centerVertical="true"
-            	android:layout_marginLeft="62dp">
-            </ImageView> -->
-            
-            <ImageButton
+          <!--   <ImageButton
            	 		android:background="@drawable/buttons_get_data" 
            	 		android:id="@+id/Button2" 
            	 		android:layout_height="80dp" 
@@ -251,44 +215,20 @@
             		android:layout_marginLeft="30dp"   	 		
            	 		android:layout_toRightOf="@+id/Button1" 
            	 		android:layout_alignTop="@+id/Button1">
-           	 </ImageButton>
-            
-            <!-- <ImageView 
-            	android:layout_width="50dp" 
-            	android:src="@drawable/image0" 
-            	android:id="@+id/LED3" 
-            	android:layout_height="50dp" 
-            	android:layout_toRightOf="@+id/LED2" 
-            	android:layout_alignTop="@+id/LED2" 
-            	android:layout_alignBottom="@+id/LED2"
-            	android:layout_centerVertical="true"
-            	android:layout_marginLeft="62dp">
-            </ImageView> -->
-            
+           	</ImageButton> -->
+             
            	<ImageButton 
             		android:background="@drawable/buttons_send_script" 
             		android:layout_width="80dp" 
             		android:id="@+id/Button3" 
             		android:layout_height="80dp"
             		android:adjustViewBounds="false" 
-            		android:layout_toRightOf="@+id/Button2"            		
-            		android:layout_alignTop="@+id/Button2"
+            		android:layout_toRightOf="@+id/Button1"            		
+            		android:layout_alignTop="@+id/Button1"
             		android:scaleType="fitCenter" 
             		android:layout_marginLeft="30dp">
             </ImageButton>           
-            
-            <!-- <ImageView 
-            	android:layout_width="50dp" 
-            	android:src="@drawable/image0" 
-            	android:id="@+id/LED4" 
-            	android:layout_height="50dp" 
-            	android:layout_toRightOf="@+id/LED3" 
-            	android:layout_alignTop="@+id/LED3" 
-            	android:layout_alignBottom="@+id/LED3"
-            	android:layout_centerVertical="true"
-            	android:layout_marginLeft="62dp">
-            </ImageView> -->
-            
+               
            	<ImageButton 
             		android:background="@drawable/buttons_chart" 
             		android:layout_width="80dp" 
@@ -313,7 +253,7 @@
             		android:layout_marginLeft="30dp">
             </ImageButton> 
             
-           	<ImageButton 
+           	<!-- <ImageButton 
             		android:background="@drawable/buttons_offline" 
             		android:layout_width="80dp" 
             		android:id="@+id/Button6" 
@@ -323,7 +263,7 @@
             		android:layout_alignTop="@+id/Button5"
             		android:scaleType="fitCenter"
             		android:layout_marginLeft="30dp">
-            </ImageButton> 
+            </ImageButton>  -->
             
         </RelativeLayout>          
         
@@ -375,30 +315,9 @@
             	android:layout_marginTop="220dp"
             	android:textStyle="bold">
             </TextView>
-                                 	
-           <!--  <ImageView 
-            	android:layout_width="wrap_content" 
-            	android:layout_height="wrap_content" 
-            	android:src="@drawable/bar" 
-            	android:layout_toRightOf="@+id/etInput" 
-            	android:layout_marginTop="18dp"
-            	android:layout_marginLeft="40dp" 
-            	android:id="@+id/line4">
-            </ImageView> -->
-            
-            <!-- <Button 
-               android:layout_width="140dp" 
-               android:layout_height="80dp" 
-               android:id="@+id/ButtonShakerSend" 
-               android:padding="3dp" 
-               android:textSize="16sp" 
-               android:layout_marginTop="30dp"
-               android:layout_toRightOf="@+id/line4" 
-               android:layout_centerVertical="true"
-               android:layout_marginLeft="15dp"
-               android:text="@string/submit" >
-            </Button>  -->
-               
+                                 
         </RelativeLayout>
         
-</LinearLayout>
+</LinearLayout> 
+ </ScrollView>  
+</android.support.v4.widget.SwipeRefreshLayout>

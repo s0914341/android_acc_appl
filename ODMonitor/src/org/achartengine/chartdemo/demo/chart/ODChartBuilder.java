@@ -41,8 +41,8 @@ import ODMonitor.App.data.chart_display_data;
 import ODMonitor.App.data.experiment_script_data;
 import ODMonitor.App.data.machine_information;
 import ODMonitor.App.data.sync_data;
+import ODMonitor.App.file.file_operate_bmp;
 import ODMonitor.App.file.file_operate_byte_array;
-import ODMonitor.App.file.file_operate_chart;
 import ODMonitor.App.file.file_operation;
 import android.app.Activity;
 import android.content.Intent;
@@ -76,6 +76,7 @@ public class ODChartBuilder extends Activity {
   public long current_index = -1;
   public int current_raw_index = -1;
   
+  private static final String SERIES_NAME = "OD series ";
   private static final long SECOND = 1000;
   private static final long MINUTE = 60*SECOND;
   private static final long HOUR = 60*MINUTE;
@@ -185,22 +186,16 @@ public class ODChartBuilder extends Activity {
   	
 		Log.d(Tag, "data_read_thread handler id:"+Thread.currentThread().getId() + "process:" + android.os.Process.myTid());
 		
-		FileOutputStream out = null;
-		 try {
-		     out = new FileOutputStream("/sdcard/chart.png");
-		     mChartView.toBitmap().compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-		     // PNG is a lossless format, the compression factor (100) is ignored
-		 } catch (Exception e) {
-		     e.printStackTrace();
-		 } finally {
-		     try {
-		         if (out != null) {
-		             out.close();
-		         }
-		     } catch (IOException e) {
-		         e.printStackTrace();
-		     }
-		 }
+		
+		file_operate_bmp write_file = new file_operate_bmp("od_chart", "chart", "png");
+		try {
+			write_file.create_file(write_file.generate_filename_no_date());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		write_file.write_file(mChartView.toBitmap(), Bitmap.CompressFormat.PNG, 100);
+		write_file.flush_close_file();
   	}
   };
   
@@ -305,111 +300,6 @@ public class ODChartBuilder extends Activity {
 			}
 		}
 	}
-  
-  /*public void init_time_series() {
-	  int file_len = 0;
-	  Date date = null;
-	  long ms = 0;
-	  double concentration = 0;
-	  
-	  file_operate_byte_array read_file = new file_operate_byte_array("testExperimentData", "testExperimentData", true);
-	  try {
-		file_len = read_file.open_read_file(read_file.generate_filename_no_date());
-		if (file_len > 0) {
-			byte[] read_buf = new byte[file_len];
-			read_file.read_file(read_buf);
-		    chart_display_data chart_data = new chart_display_data();
-		    byte[] chart_temp = new byte[chart_data.get_total_length()];
-		    int offset = 0;
-		    
-		    for (offset = 0; offset < file_len; offset += chart_temp.length) {
-		    	if ((offset + chart_data.get_total_length()) <= file_len) {
-		    	    System.arraycopy(read_buf, offset, chart_temp, 0, chart_temp.length);
-		    	    if (0 == chart_data.set_object_buffer(chart_temp)) {
-		    	    	ms = chart_data.get_date_value();
-		    	    	concentration = chart_data.get_concentration_value();
-		    	    	date = new Date(ms);
-		    	    	if (chart_data.get_index_value() == 0) {
-		    	  			mRenderer.setRange(new double[] {ms, ms+20000, 0, 50});
-		    	  			CreateNewSeries();
-		    	  		}
-		    	    	
-		    	    	current_index = chart_data.get_index_value();
-		    	    	mCurrentSeries.add(date, concentration);
-		    	    } else {
-		    	    	Log.e("Chart", "chart_data.set_object_buffer fail");
-		    	    }
-		    	} else
-		    		break;
-		    }
-		    refresh_current_view_range(date, concentration);
-		}
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-  }*/
-  
-   /* public void init_time_series() {
-        Date date = null;
-        double od_value = 0;
-        long experiment_start_ms = 0;
-        
-   
-		file_operation read_file = new file_operation("od_sensor", "sensor_online", true);
-        try {
-	        read_file.open_read_file(read_file.generate_filename_no_date());
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-	        read_file = new file_operation("od_sensor", "sensor_offline", true);
-	        try {
-				read_file.open_read_file(read_file.generate_filename_no_date());
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-        }
-        
-        try {    	
-	        String sensor_str = new String();
-	        sensor_str = read_file.read_file();
-	        if(sensor_str != null) {
-	        	byte[] temp = OD_calculate.parse_date(sensor_str);
-	        	ByteBuffer byte_buffer = ByteBuffer.wrap(temp, 0, 8);
-	    		//byte_buffer.order(ByteOrder.LITTLE_ENDIAN);
-	        	experiment_start_ms = byte_buffer.getLong();
-	        }
-	        sensor_str = read_file.read_file();
-	        while (sensor_str != null) {
-				int[] data = null;
-		        data = OD_calculate.parse_raw_data(sensor_str);
-		        if (data != null) {
-		            int[] channel_data = new int[OD_calculate.total_sensor_channel];
-		            System.arraycopy(data, OD_calculate.sensor_ch1_index, channel_data, 0, OD_calculate.total_sensor_channel);
-		            od_value = OD_calculate.calculate_od(channel_data);
-		            date = new Date(experiment_start_ms + (long)(data[OD_calculate.experiment_seconds_index]*1000));
-		            
-		            if (mCurrentSeries == null) {
-		            	mRenderer.setRange(new double[] {date.getTime(), date.getTime()+20000, 0, 50});
-	  			        CreateNewSeries();
-		            }
-		            
-		            current_index = (long)data[OD_calculate.sensor_index_index];
-	    	        mCurrentSeries.add(date, od_value);
-		        } else {
-		        	Log.e(Tag, "parse raw data fail");
-		        }
-		        
-		        sensor_str = read_file.read_file();
-			} 
-	        
-	        refresh_current_view_range(date, od_value);     
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-    }*/
     
     public void init_time_series() {
         Date date = null;
@@ -477,7 +367,7 @@ public class ODChartBuilder extends Activity {
     }
   
     public void CreateNewSeries() {
-        String seriesTitle = "Series " + (mDataset.getSeriesCount() + 1);
+        String seriesTitle = SERIES_NAME + (mDataset.getSeriesCount() + 1);
         // create a new series of data
         TimeSeries series = new TimeSeries(seriesTitle);
         // XYSeries series = new XYSeries(seriesTitle);
@@ -512,15 +402,21 @@ public class ODChartBuilder extends Activity {
             // handle the click event on the chart
                 SeriesSelection seriesSelection = mChartView.getCurrentSeriesAndPoint();
                 if (seriesSelection == null) {
-                    Toast.makeText(ODChartBuilder.this, "No chart element", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(ODChartBuilder.this, "No chart element", Toast.LENGTH_SHORT).show();
                 } else {
                     // display information of the clicked point
-                    Toast.makeText(
+                	Date date = new Date((long)seriesSelection.getXValue());
+                	Toast.makeText(
+                    ODChartBuilder.this,
+                    SERIES_NAME + (seriesSelection.getSeriesIndex()+1)
+                    + "\nclosest point value X=" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() 
+                    + "\nY=" + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();
+                    /*Toast.makeText(
                         ODChartBuilder.this,
-                        "Chart element in series index " + seriesSelection.getSeriesIndex()
-                        + " data point index " + seriesSelection.getPointIndex() + " was clicked"
-                        + " closest point value X=" + seriesSelection.getXValue() + ", Y="
-                        + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();
+                        "Chart element in series index= " + seriesSelection.getSeriesIndex()
+                        + "\ndata point index= " + seriesSelection.getPointIndex()
+                        + "\nclosest point value X=" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() 
+                        + "\nY=" + seriesSelection.getValue(), Toast.LENGTH_SHORT).show();*/
                 }
             }
             });

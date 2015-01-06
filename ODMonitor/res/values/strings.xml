@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="hello">Hello World, LEDActivity!</string>
-    <string name="app_name">FTDI Demo</string>
+    <string name="app_name">OD Monitor</string>
     <string name="submit">Send</string>
     <string name="script_add_item">Add Instruction</string>
     <string name="script_clear_all">Clear All</string>

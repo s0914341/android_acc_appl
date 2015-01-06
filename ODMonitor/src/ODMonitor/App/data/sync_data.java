@@ -8,10 +8,19 @@ public class sync_data{
 	
 	private int status;
 	private int meta_data;
+	private boolean is_timeout = true;
 	
 	public sync_data() {
 		status = 0;
 		meta_data = 0;
+	}
+	
+	public void set_is_timeout(boolean data) {
+		is_timeout = data;
+	}
+	
+	public boolean get_is_time() {
+	    return is_timeout;
 	}
 	
 	public void set_status(int data) {

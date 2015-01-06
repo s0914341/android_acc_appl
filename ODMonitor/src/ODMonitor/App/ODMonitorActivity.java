@@ -48,6 +48,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -68,7 +70,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ODMonitorActivity extends Activity{
+public class ODMonitorActivity extends Activity {
 	public String Tag = "ODMonitorActivity";
 	private static final String ACTION_USB_PERMISSION = "OD.MONITOR.USB_PERMISSION";
 	public UsbManager usbmanager;
@@ -79,6 +81,8 @@ public class ODMonitorActivity extends Activity{
 	public FileOutputStream outputstream = null;
 	public boolean mPermissionRequestPending = true;
 	
+	public static final int UI_GET_MACHINE_INFO_REFRESH = 0;
+	
 	public static final long WAIT_TIMEOUT = 3000;
 	public byte  ledPrevMap = 0x00;
 	//public byte[] usbdataIN;
@@ -88,9 +92,9 @@ public class ODMonitorActivity extends Activity{
 	public SeekBar volumecontrol;
     public ProgressBar slider;
     
-    public ImageButton button1; //Button led1;
+    public ImageButton start_button; //Button led1;
     public ImageButton button2; //Button led2;
-    public ImageButton button3; //Button led3;
+    public ImageButton send_script_button; //Button led3;
     public ImageButton button4; //Button led4;
     public ImageButton button5;
     public ImageButton button6;
@@ -115,13 +119,14 @@ public class ODMonitorActivity extends Activity{
     /*thread to listen USB data*/
     public aoa_thread handlerThread;
     public data_write_thread data_write_thread;
-    public Object sync_object;
+    public sync_data sync_object;
     
     public TextView textView2;
     public ProgressDialog mypDialog;
     public sync_data sync_get_experiment;
     public sync_data sync_chart_notify;
     private boolean aoa_thread_run = false;
+    private SwipeRefreshLayout laySwipe;
     
 	/** Called when the activity is first created. */
     @Override
@@ -164,27 +169,29 @@ public class ODMonitorActivity extends Activity{
 		//mypDialog.setButton("Google",this);
 		mypDialog.setIndeterminate(true);
 		mypDialog.setCancelable(false);
-		sync_object = new Object();
+		sync_object = new sync_data();
 		sync_chart_notify = new sync_data();
 		ODMonitor_Application app_data = ((ODMonitor_Application)this.getApplication());
 		app_data.set_sync_chart_notify(sync_chart_notify);
                
-        button1 = (ImageButton) findViewById(R.id.Button1);
-        button1.setOnClickListener(new View.OnClickListener() {
+		start_button = (ImageButton) findViewById(R.id.Button1);
+		start_button.setEnabled(false);
+		start_button.setOnClickListener(new View.OnClickListener() {
         	public void onClick(View v) {
         		start_experiment();
         	}
 		});
         
-        button2 = (ImageButton) findViewById(R.id.Button2);
+        /*button2 = (ImageButton) findViewById(R.id.Button2);
         button2.setOnClickListener(new View.OnClickListener() {		
 			public void onClick(View v) {
 				new Thread(new get_experiment_task()).start();
 			}
-		});
+		});*/
         
-        button3 = (ImageButton) findViewById(R.id.Button3);
-        button3.setOnClickListener(new View.OnClickListener() {
+		send_script_button = (ImageButton) findViewById(R.id.Button3);
+		send_script_button.setEnabled(false);
+		send_script_button.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
         		file_operate_byte_array read_file = new file_operate_byte_array("ExperimentScript", "ExperimentScript", true);
 		    	try {
@@ -224,13 +231,13 @@ public class ODMonitorActivity extends Activity{
 			}
 		});  
         
-        button6 = (ImageButton) findViewById(R.id.Button6);
+       /* button6 = (ImageButton) findViewById(R.id.Button6);
         button6.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				set_tablet_on_off_line((byte)0, false);
 				//SensorDataReceive();
 			}
-		});  
+		});  */
         
         etInput = (EditText)findViewById(R.id.etInput); 
         etInput.setOnKeyListener(new OnKeyListener() {
@@ -247,8 +254,23 @@ public class ODMonitorActivity extends Activity{
          } 
          });
         
+        laySwipe = (SwipeRefreshLayout) findViewById(R.id.laySwipe);
+      //  laySwipe.setOnRefreshListener(this);
+        laySwipe.setOnRefreshListener(onSwipeToRefresh);
+        laySwipe.setColorSchemeResources(
+        	    android.R.color.holo_red_light, 
+        	    android.R.color.holo_blue_light, 
+        	    android.R.color.holo_green_light, 
+        	    android.R.color.holo_orange_light);
+      
         Log.d ( Tag, "intent get action: " +this.getIntent().getAction());
     }
+    
+    private OnRefreshListener onSwipeToRefresh = new OnRefreshListener() {
+        public void onRefresh() {
+        	new Thread(new get_machine_info_task(UIhandler)).start();
+        }
+    };
     
     @Override
     protected void onNewIntent(Intent intent) {
@@ -326,31 +348,42 @@ public class ODMonitorActivity extends Activity{
     	} while (sync_data.STATUS_END != sync_get_experiment.get_status());
     }
     
-    public void get_machine_information(boolean block) {
+    public int get_machine_information(boolean block) {
+    	int ret = 0;
+    	
 		byte[] data = new byte[1];
 		data[0] = 0;
-		WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS, android_accessory_packet.STATUS_OK, data, 0);
+		if (0 != (ret = WriteUsbCommand(android_accessory_packet.DATA_TYPE_GET_MACHINE_STATUS, android_accessory_packet.STATUS_OK, data, 0)))
+			return ret;
 		
 		if (false == block)
-			return;
+			return ret;
 		
 		synchronized (sync_object) {
 		    try {
-		    	sync_object.wait();
+		    	sync_object.set_is_timeout(true);
+		    	sync_object.wait(WAIT_TIMEOUT);
+		    	if (sync_object.get_is_time() == true)
+		    		ret = -1;
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		
+		return ret;
     }
     
-    public void set_tablet_on_off_line(byte status, boolean block) {
+    public int set_tablet_on_off_line(byte status, boolean block) {
+    	int ret = 0;
+    	
 		byte[] data = new byte[1];
 		data[0] = status;
-		WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE, android_accessory_packet.STATUS_OK, data, 1);
+		if (0 != (ret = WriteUsbCommand(android_accessory_packet.DATA_TYPE_SET_TABLET_ON_OFF_LINE, android_accessory_packet.STATUS_OK, data, 1)))
+			return ret;
 		
 		if (false == block)
-			return;
+			return ret;
 		
 		synchronized (sync_object) {
 		    try {
@@ -360,23 +393,11 @@ public class ODMonitorActivity extends Activity{
 				e.printStackTrace();
 			}
 		}
+		
+		return ret;
     }
     
     public void show_chart_activity() {
-    /*  final Dialog dialog = new Dialog(context);
- 	    dialog.setContentView(R.layout.xy_layout);
- 	    dialog.setTitle("Title...");
- 	   
- 	    Button dialogButton = (Button) dialog.findViewById(R.id.toggleButton1);
- 		// if button is clicked, close the custom dialog
- 	    dialogButton.setOnClickListener(new OnClickListener() {
- 	        public void onClick(View v) {
- 				dialog.dismiss();
- 			}
- 		});
- 	    
-
- 		dialog.show();*/
     	Intent intent = null;
     	//intent = mCharts[0].execute(this);
     	intent = new Intent(this, ODChartBuilder.class);
@@ -489,8 +510,31 @@ public class ODMonitorActivity extends Activity{
 			get_experiment_data(true, true);
 	    } 	
 	}
-
 	
+	class get_machine_info_task implements Runnable {
+		Handler mHandler;
+	
+		get_machine_info_task(Handler h) {
+			mHandler = h;
+		}
+		
+		public void run() {
+			String str_status;
+			if (0 == get_machine_information(true))
+				str_status = new String("refresh done!");
+			else
+				str_status = new String("refresh fail!");
+			/**
+			 * send message to UIhandler to do refresh UI task 
+			 */
+			Bundle b = new Bundle(1);
+			Message msg = mHandler.obtainMessage();
+			b.putString("get_machine_info_status", str_status);
+			msg.arg1 = UI_GET_MACHINE_INFO_REFRESH;
+			msg.setData(b);
+		    mHandler.sendMessage(msg);
+	    } 	
+	}
 	
 	/*open the accessory*/
 	private void OpenAccessory(UsbAccessory accessory) {
@@ -602,6 +646,8 @@ public class ODMonitorActivity extends Activity{
 		mass_storage_status.setEnabled(false);
 		sensor_status.setEnabled(false);
 		shaker_status.setEnabled(false);
+		start_button.setEnabled(false);
+		send_script_button.setEnabled(false);
 		
 		//System.exit(0);
 	}
@@ -614,23 +660,43 @@ public class ODMonitorActivity extends Activity{
 	    		machine_information.EXPERIMENT_STATUS.get(info.get_experiment_status()));
     	debug_view.setText(str);
     	
-    	if (info.get_sensor_status() == machine_information.STATUS_SENSOR_READY)
+    	boolean mass_storage_ready = false;
+    	boolean shaker_ready = false;
+    	boolean sensor_ready = false;
+    	if (info.get_sensor_status() == machine_information.STATUS_SENSOR_READY) {
+    		sensor_ready = true;
     		sensor_status.setEnabled(true);
-    	else
+    	} else {
     		sensor_status.setEnabled(false);
+    	}
     	
-    	if (info.get_mass_storage_status() == machine_information.STATUS_MASS_STORAGE_READY)
+    	if (info.get_mass_storage_status() == machine_information.STATUS_MASS_STORAGE_READY) {
+    		mass_storage_ready = true;
     		mass_storage_status.setEnabled(true);
-    	else
+    	} else {
     		mass_storage_status.setEnabled(false);
+    	}
     	
-    	if (info.get_shaker_status() == machine_information.STATUS_SHAKER_READY)
+    	if (info.get_shaker_status() == machine_information.STATUS_SHAKER_READY) {
+    		shaker_ready = true;
     		shaker_status.setEnabled(true);
-    	else
+    	} else {
     		shaker_status.setEnabled(false);
+    	}
+    	
+    	if ((true == mass_storage_ready) && (true == shaker_ready) && (true == sensor_ready))
+    	    start_button.setEnabled(true);
+    	else
+    		start_button.setEnabled(false);
+    	
+    	if (true == mass_storage_ready)
+    	    send_script_button.setEnabled(true);
+    	else
+    		send_script_button.setEnabled(false);
     	
     	if (sync_object != null) {
     	    synchronized (sync_object) {
+    	    	sync_object.set_is_timeout(false);
     		    sync_object.notify();
     	    }
     	}
@@ -685,6 +751,24 @@ public class ODMonitorActivity extends Activity{
 	        e.printStackTrace();
         }
 	}
+	
+	final Handler UIhandler = new Handler() {
+		public void handleMessage(Message msg) {	
+			switch (msg.arg1) {
+			    case UI_GET_MACHINE_INFO_REFRESH:
+			    	final String str_status = msg.getData().getString("get_machine_info_status", "no status");
+			    	
+			    	this.postDelayed(new Runnable() {
+	                    public void run() {
+	                        laySwipe.setRefreshing(false);
+	                        Toast.makeText(getApplicationContext(), str_status, Toast.LENGTH_SHORT).show();
+	                    }
+	                }, 1000);
+			    
+			    break;
+			}
+		}
+	};
 		
 	
 	final Handler handler =  new Handler() {
@@ -924,35 +1008,25 @@ public class ODMonitorActivity extends Activity{
 		}
 	}
 	
-	public void WriteUsbCommand(byte type, byte status, byte[] data, int len){	
-		
+	public int WriteUsbCommand(byte type, byte status, byte[] data, int len){	
+	    int ret = 0;
+	    
 		acc_pkg_transfer.set_Type(type);
 		acc_pkg_transfer.set_Status(status);
 		acc_pkg_transfer.copy_to_data(data, len);
 		acc_pkg_transfer.set_Len((byte)len);
-		
-		//Log.d("LED", "pressed " +iButton);
-		/*switch(cmd) {
-		    case  android_accessory_packet.DATA_TYPE_KEYPAD:
-		    	acc_pkg_transfer.copy_to_data(data, len);
-		    	break;
-		    	
-		    case android_accessory_packet.DATA_TYPE_SET_EXPERIMENT_STATUS:
-		    	break;
-		    	
-		    case android_accessory_packet.DATA_TYPE_GET_EXPERIMENT_DATA:
-		    	break;
-		    	
-		    case android_accessory_packet.DATA_TYPE_SEND_SHAKER_COMMAND:
-		    	break;
-		}*/
-		
+
 		try{
 			if(outputstream != null){
 				outputstream.write(acc_pkg_transfer.buffer, 0,  len + android_accessory_packet.get_header_size());
+			} else {
+				ret = -1;
 			}
-		}
-		catch (IOException e) {}		
+		} catch (IOException e) {
+			ret = -2;
+		}		
+		
+		return ret;
 	}
    
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
