@@ -56,6 +56,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -86,6 +87,10 @@ public class ODChartBuilder extends Activity {
   public sync_data sync_chart_notify;
   private boolean data_read_thread_run = false;
   public TextView debug_view;
+  private ImageButton zoom_in_button;
+  private ImageButton zoom_out_button;
+  private ImageButton zoom_fit_button;
+  private ImageButton save_chart_button;
 
 
   @Override
@@ -113,7 +118,7 @@ public class ODChartBuilder extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
 	  Log.d(Tag, "on Create");
       super.onCreate(savedInstanceState);
-      setContentView(R.layout.xy_layout);
+      setContentView(R.layout.chart_layout);
       getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
       Thread.currentThread().setName("Thread_XYChartBuilder");
       
@@ -133,9 +138,49 @@ public class ODChartBuilder extends Activity {
       long now = new Date().getTime();
     
       mRenderer.setRange(new double[] {now, now+60000, 0, 50});
-      mRenderer.setZoomButtonsVisible(true);
+      //mRenderer.setZoomButtonsVisible(true);
+      mRenderer.setZoomEnabled(true);
+      mRenderer.setExternalZoomEnabled(true);
+      mRenderer.setInScroll(true);
       mRenderer.setShowGrid(true);
-      mRenderer.setPointSize(5);
+      mRenderer.setPointSize(8);
+      
+      zoom_in_button = (ImageButton) findViewById(R.id.zoomIn);
+      zoom_in_button.setOnClickListener(new View.OnClickListener() {
+          public void onClick(View v) {
+    	      mChartView.zoomIn();
+      	  }
+	  });
+      
+      zoom_out_button = (ImageButton) findViewById(R.id.zoomOut);
+      zoom_out_button.setOnClickListener(new View.OnClickListener() {
+          public void onClick(View v) {
+    	      mChartView.zoomOut();
+      	  }
+	  });
+      
+      zoom_fit_button = (ImageButton) findViewById(R.id.zoomFit);
+      zoom_fit_button.setOnClickListener(new View.OnClickListener() {
+          public void onClick(View v) {
+    	      mChartView.zoomReset();
+      	  }
+	  });
+      
+      save_chart_button = (ImageButton) findViewById(R.id.saveChart);
+      save_chart_button.setOnClickListener(new View.OnClickListener() {
+          public void onClick(View v) {
+              file_operate_bmp write_file = new file_operate_bmp("od_chart", "chart", "png");
+      		  try {
+      			  write_file.create_file(write_file.generate_filename_no_date());
+      		  } catch (IOException e) {
+      			  // TODO Auto-generated catch block
+      			  e.printStackTrace();
+      		  }
+      		  write_file.write_file(mChartView.toBitmap(), Bitmap.CompressFormat.PNG, 100);
+      		  write_file.flush_close_file();
+      		  Toast.makeText(ODChartBuilder.this, "Save chart success!", Toast.LENGTH_SHORT).show(); 
+      	  }
+	  });
     
       init_time_series();
       //read_thread();
@@ -185,17 +230,6 @@ public class ODChartBuilder extends Activity {
     	debug_view.setText(str);
   	
 		Log.d(Tag, "data_read_thread handler id:"+Thread.currentThread().getId() + "process:" + android.os.Process.myTid());
-		
-		
-		file_operate_bmp write_file = new file_operate_bmp("od_chart", "chart", "png");
-		try {
-			write_file.create_file(write_file.generate_filename_no_date());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		write_file.write_file(mChartView.toBitmap(), Bitmap.CompressFormat.PNG, 100);
-		write_file.flush_close_file();
   	}
   };
   

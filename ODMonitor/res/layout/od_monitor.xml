@@ -11,7 +11,7 @@
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#33333333"
+    android:background="#FF111111"
     android:orientation="vertical"
     android:focusable="true"
     android:focusableInTouchMode="true" >
@@ -193,9 +193,11 @@
             	android:text="Script Set"
             	android:textStyle="bold">
             </TextView>
-            
-            <ImageButton 
-                android:background="@drawable/buttons_start" 
+        	
+            <ToggleButton 
+                android:textOn="" 
+                android:textOff=""
+                android:background="@drawable/start_button" 
             	android:scaleType="fitCenter" 
             	android:layout_width="80dp" 
             	android:layout_height="80dp" 
@@ -203,7 +205,7 @@
             	android:adjustViewBounds="false" 
             	android:layout_marginTop="50dp"
             	android:layout_marginLeft="42dp" android:focusable="true">
-            </ImageButton>
+            </ToggleButton>
             
           <!--   <ImageButton
            	 		android:background="@drawable/buttons_get_data" 

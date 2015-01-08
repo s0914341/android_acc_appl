@@ -69,6 +69,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 public class ODMonitorActivity extends Activity {
 	public String Tag = "ODMonitorActivity";
@@ -92,7 +93,7 @@ public class ODMonitorActivity extends Activity {
 	public SeekBar volumecontrol;
     public ProgressBar slider;
     
-    public ImageButton start_button; //Button led1;
+    public ToggleButton start_button; //Button led1;
     public ImageButton button2; //Button led2;
     public ImageButton send_script_button; //Button led3;
     public ImageButton button4; //Button led4;
@@ -174,12 +175,16 @@ public class ODMonitorActivity extends Activity {
 		ODMonitor_Application app_data = ((ODMonitor_Application)this.getApplication());
 		app_data.set_sync_chart_notify(sync_chart_notify);
                
-		start_button = (ImageButton) findViewById(R.id.Button1);
+		start_button = (ToggleButton) findViewById(R.id.Button1);
 		start_button.setEnabled(false);
 		start_button.setOnClickListener(new View.OnClickListener() {
-        	public void onClick(View v) {
-        		start_experiment();
-        	}
+		    public void onClick(View v) {
+		        if (((ToggleButton) v).isChecked()) {
+		        	start_experiment(true);
+		        } else {
+		        	start_experiment(false);
+		        }
+		    }
 		});
         
         /*button2 = (ImageButton) findViewById(R.id.Button2);
@@ -291,7 +296,7 @@ public class ODMonitorActivity extends Activity {
         registerReceiver(mUsbReceiver, filter);*/
     }
     
-    public void start_experiment() {
+    public void start_experiment(boolean run) {
     	file_operate_byte_array write_file = new file_operate_byte_array("od_sensor", "sensor_offline_byte", true);
 		try {
 			write_file.delete_file(write_file.generate_filename_no_date());
@@ -301,7 +306,11 @@ public class ODMonitorActivity extends Activity {
 		}
 		
 		byte[] data = new byte[9];
-		data[0] = android_accessory_packet.STATUS_EXPERIMENT_START;
+		if (true == run) {
+		    data[0] = android_accessory_packet.STATUS_EXPERIMENT_START;
+		} else {
+			data[0] = android_accessory_packet.STATUS_EXPERIMENT_STOP;
+		}
 		// get current time data and write to file
 		byte[] start_time_bytes = ByteBuffer.allocate(8).putLong(new Date().getTime()).array();
 		try {
